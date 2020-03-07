@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from 'bootstrap/form.html' import render_form %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+
+{% block app_content %}
+    <a href="/clusters/upload" class="btn btn-primary">Upload new clusters</a>
+
+    {% for group in groups.items %}
+        <div class="card mt-3 mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{ group.name }}</h5>
+                <a class="btn btn-primary" href="clusters/{{ group.id  }}">Browse clusters</a>
+                 {% if group.user == current_user %}
+                    <div class="float-right">
+                        {{ render_form(delete_form, action='/clusters/' ~ group.id ~ '/delete', button_map={'delete_button': 'danger'}) }}
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+    {% endfor %}
+
+    {{ render_pagination(groups, args={}) }}
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+{% endblock %}

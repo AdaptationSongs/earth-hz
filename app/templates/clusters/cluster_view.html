@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from 'bootstrap/form.html' import render_form %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+
+{% block app_content %}
+    {{ render_form(filter_form, form_type='horizontal') }}
+
+    {% for cluster in clusters.items %}
+        <div class="card mt-3 mb-3">
+            <div class="card-body row">
+                <div class="col-md-6">
+                    <a class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ cluster.file.name }}', '{{ cluster.nearest_window() }}')">Play clip</a>
+                    <p class="card-text">Time: {{ cluster.window_start() }}</p>
+                    <p class="card-text">Recording device: {{ cluster.file.sn }}</p>
+                    <p class="card-text">Manual ID: {{ cluster.label }}</p>
+                    <p class="card-text">Labels: <ul>
+                        {% for clip in cluster.labeled_clips() %}
+                            <li>{{ clip.label.name }}</li>
+                        {% endfor %}
+                    </ul></p>
+                    <a class="btn btn-primary" href="/clip/{{ cluster.file.name }}/{{ cluster.nearest_window() }}">Label</a>
+                </div>
+                <div class="col-md-6">
+                    <img class="card-img-top" src="/spectrogram/{{ cluster.file_name }}-{{ cluster.nearest_window() }}.png">
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    {{ render_pagination(clusters, args=filters) }}
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script type="text/javascript" src="/static/audio-functions.js"></script>
+{% endblock %}

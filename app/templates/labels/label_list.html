@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from 'bootstrap/form.html' import render_form %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+
+{% block app_content %}
+    {{ render_form(filter_form, form_type='horizontal') }}
+
+    {% for clip in clips.items %}
+        <div class="card mt-3 mb-3">
+            <div class="card-body">
+                <a  class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ clip.file.name }}', '{{ clip.offset }}')">Play clip</a>
+                <h5 class="card-title">{{ clip.label.name }}</h5>
+                <p class="card-text">Start time: {{ clip.start_time() }}</p>
+                <p class="card-text">Recording device: {{ clip.file.sn }}</p>
+                <p class="card-text">submitted by {{ clip.user }} on {{ clip.modified }}</p>
+                <a  class="btn btn-primary" href="/clip/{{ clip.file.name }}/{{ clip.offset }}">Edit Labels</a>
+            </div>
+        </div>
+    {% endfor %}
+
+    {{ render_pagination(clips, args=filters) }}
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script type="text/javascript" src="/static/audio-functions.js"></script>
+{% endblock %}

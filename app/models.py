@@ -1,0 +1,192 @@
+from flask_login import UserMixin
+from datetime import datetime, timedelta
+from app import db, login, admin
+from flask_admin.contrib.sqla import ModelView
+from flask import current_app
+
+# DB Models
+
+
+class User(db.Model, UserMixin):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=True)
+    avatar = db.Column(db.String(200))
+    tokens = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow())
+
+    def __repr__(self):
+        return self.name
+
+@login.user_loader
+def load_user(id):
+    return User.query.get(int(id))
+
+admin.add_view(ModelView(User, db.session))
+
+
+class MonitoringStation(db.Model):
+    __tablename__ = 'monitoring_stations'
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(255), nullable=False)
+    attachment_point = db.Column(db.String(255))
+    details = db.Column(db.String(255))
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    elevation = db.Column(db.Float)
+    height = db.Column(db.Float)
+    canopy_density = db.Column(db.Integer)
+
+    def __repr__(self):
+        return self.name
+
+admin.add_view(ModelView(MonitoringStation, db.session))
+
+
+class EquipmentType(db.Model):
+    __tablename__ = 'equipment_types'
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(255), nullable=False)
+
+    def __repr__(self):
+        return self.name
+
+admin.add_view(ModelView(EquipmentType, db.session))
+
+
+class Equipment(db.Model):
+    __tablename__ = 'equipment'
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    station_id = db.Column(db.Integer, db.ForeignKey(MonitoringStation.id), nullable=False)
+    station = db.relationship('MonitoringStation')
+    type_id = db.Column(db.Integer, db.ForeignKey(EquipmentType.id), nullable=False)
+    type = db.relationship('EquipmentType')
+    manufacturer = db.Column(db.String(255))
+    model = db.Column(db.String(255))
+    serial_number = db.Column(db.String(255))
+    deployed = db.Column(db.DateTime)
+    removed = db.Column(db.DateTime)
+    notes = db.Column(db.String(255))
+
+    def __repr__(self):
+        return self.serial_number
+
+admin.add_view(ModelView(Equipment, db.session))
+
+
+class AudioFile(db.Model):
+    __tablename__ = 'audio_files'
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    sn = db.Column(db.String(255))
+    timestamp = db.Column(db.DateTime)
+    path = db.Column(db.String(255))
+    name = db.Column(db.String(255), unique=True)
+    size = db.Column(db.Integer)
+
+
+class ClusterGroup(db.Model):
+    __tablename__ = 'cluster_groups'
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(255), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    user = db.relationship('User')
+    clusters = db.relationship('Cluster', back_populates='group', cascade='all, delete, delete-orphan')
+
+#admin.add_view(ModelView(ClusterGroup, db.session))
+
+
+class Cluster(db.Model):
+    __tablename__ = 'clusters'
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    file_name = db.Column('IN FILE', db.String(255), db.ForeignKey(AudioFile.name))
+    file = db.relationship('AudioFile')
+    start = db.Column('OFFSET', db.Float)
+    duration = db.Column('DURATION', db.Float)
+    cluster_name = db.Column('TOP1MATCH', db.String(255))
+    label = db.Column('MANUAL ID', db.String(255))
+    cg_id = db.Column(db.Integer, db.ForeignKey(ClusterGroup.id), nullable=False)
+    group = db.relationship('ClusterGroup', back_populates='clusters')
+
+    def start_f(self):
+        return str(timedelta(seconds=self.start))
+
+    def nearest_window(self):
+        window = current_app.config['CLIP_SECS']
+        return round(self.start / window) * window
+
+    def window_start(self):
+        return str(self.file.timestamp + timedelta(seconds=self.nearest_window()))
+
+    def name_count(self):
+        return Cluster.query.filter_by(cluster_name=self.cluster_name, cg_id=self.cg_id).count()
+
+    def labeled_clips(self):
+        return LabeledClip.query.filter_by(file_name=self.file_name, offset=self.nearest_window()).all()
+
+
+class LabelType(db.Model):
+    __tablename__ = 'label_types'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), unique=True, nullable=False)
+
+    def __repr__(self):
+        return self.name
+
+admin.add_view(ModelView(LabelType, db.session))
+
+
+class Label(db.Model):
+    __tablename__ = 'labels'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), unique=True, nullable=False)
+    type_id = db.Column(db.Integer, db.ForeignKey(LabelType.id), nullable=False)
+    type = db.relationship('LabelType')
+
+    def __repr__(self):
+        return self.name
+
+admin.add_view(ModelView(Label, db.session))    
+
+
+class Language(db.Model):
+    __tablename__ = 'language'
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(5), nullable=False)
+    name = db.Column(db.String(255), unique=True, nullable=False)
+
+    def __repr__(self):
+        return self.name
+
+admin.add_view(ModelView(Language, db.session))
+
+
+class CommonName(db.Model):
+    __tablename__ = 'common_name'
+    id = db.Column(db.Integer, primary_key=True)
+    label_id = db.Column(db.Integer, db.ForeignKey(Label.id), nullable=False)
+    label = db.relationship('Label')
+    language_id = db.Column(db.Integer, db.ForeignKey(Language.id), nullable=False)
+    language = db.relationship('Language')
+    name = db.Column(db.String(255), nullable=False)
+    notes = db.Column(db.String(255), nullable=True)
+
+admin.add_view(ModelView(CommonName, db.session))
+
+
+class LabeledClip(db.Model):
+    __tablename__ = 'labeled_clips'
+    id = db.Column(db.Integer, primary_key=True)
+    file_name = db.Column(db.String(255), db.ForeignKey(AudioFile.name))
+    file = db.relationship('AudioFile')
+    offset = db.Column(db.Float)
+    duration = db.Column(db.Float)
+    label_id = db.Column(db.Integer, db.ForeignKey(Label.id))
+    label = db.relationship('Label')
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    user = db.relationship('User')
+    notes = db.Column(db.String(255), nullable=True)
+    modified = db.Column(db.DateTime, default=datetime.utcnow())
+
+    def start_time(self):
+        return str(self.file.timestamp + timedelta(seconds=self.offset))

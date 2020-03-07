@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from 'bootstrap/form.html' import render_form %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+
+{% block app_content %}
+    {{ render_form(filter_form, form_type='horizontal') }}
+
+    {% for cluster in clusters.items %}
+        <div class="card mt-3 mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{ cluster.cluster_name }}</h5>
+                <p class="card-text">{{ cluster.name_count() }} clips</p>
+                <a class="btn btn-primary" href="{{ cluster.cg_id  }}/{{ cluster.cluster_name }}">Browse clips</a></a>
+            </div>
+        </div>
+    {% endfor %}
+
+    {{ render_pagination(clusters, args=filters) }}
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+{% endblock %}

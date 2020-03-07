@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from 'bootstrap/form.html' import render_form %}
+
+{% block app_content %}
+    <a class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ file_name }}', '{{ offset }}')">Play clip</a>
+    <img class="img-fluid" src="/spectrogram/{{ file_name }}-{{ offset }}.png">
+
+    <div class="card mt-3 mb-3">
+         <div class="card-body">
+             <h3 class="card-title">Label</h3>
+             {{ render_form(form) }}
+         </div>
+    </div>
+
+    <h3>Current Labels</h3>
+    {% for label in labels %}
+        <div class="card mt-3 mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{ label.label.name }}</h5>
+                <p class="card-text">submitted by {{ label.user }} on {{ label.modified }}</p>
+                {% if label.notes %} <p class="card-text">Notes: {{ label.notes }}</p> {% endif %}
+                {% if label.user == current_user %}
+                    <div class="float-right">
+                        {{ render_form(delete_form, action='/clip/' ~ file_name ~ '/' ~ offset ~ '/delete/' ~ label.id, button_map={'delete_button': 'danger'}) }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script type="text/javascript" src="/static/audio-functions.js"></script>
+{% endblock %}
+
