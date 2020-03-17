@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% from 'bootstrap/form.html' import render_form %}
 
+{% block navbar %}
+    {{ super() }}
+    <audio controls="controls" class="w-100 bg-light">
+        Please upgrade your browser.
+    </audio>
+{% endblock %}
+
 {% block app_content %}
     <a class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ file_name }}', '{{ offset }}')">Play clip</a>
     <img class="img-fluid" src="/spectrogram/{{ file_name }}-{{ offset }}.png">

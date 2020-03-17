@@ -16,34 +16,24 @@
 {% endblock %}
 
 {% block navbar %}
-
-    <div id="wrapper-navbar" itemscope="" itemtype="http://schema.org/WebSite" class="fixed-top">
-        <a class="skip-link sr-only sr-only-focusable" href="#content">Skip to content</a>
-        <nav class="navbar navbar-expand-md navbar-light bg-light">
-            <div class="container">
-                <a class="navbar-brand" href="{{ url_for('main.index') }}">Songs of Adaptation</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div id="navbarNavDropdown" class="collapse navbar-collapse">
-<!--                    <ul id="main-menu" class="navbar-nav ml-auto"> -->
-                        {{ render_nav_item('audio.list_files', 'Recordings') }}
-                        {{ render_nav_item('clusters.cluster_groups', 'Clusters') }}
-                        {{ render_nav_item('labels.list_labels', 'Labels') }}
-
-<!--                    </ul> -->
-                </div>
-            </div><!-- .container -->
-        </nav><!-- .site-navigation -->
-
-        <audio controls="controls" style="width: 100%">
-            Please upgrade your browser.
-        </audio>
-    </div><!-- #wrapper-navbar -->
+    <a class="skip-link sr-only sr-only-focusable" href="#content">Skip to content</a>
+    <nav class="navbar navbar-expand-md navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">Songs of Adaptation</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div id="navbarNavDropdown" class="collapse navbar-collapse">
+                {{ render_nav_item('audio.list_files', 'Recordings') }}
+                {{ render_nav_item('clusters.cluster_groups', 'Clusters') }}
+                {{ render_nav_item('labels.list_labels', 'Labels') }}
+            </div>
+        </div><!-- .container -->
+    </nav><!-- .site-navigation -->
 {% endblock %}
 
 {% block content %}
-    <div id="content" class="container">
+    <div id="content" class="container h-100">
         {{ render_messages() }}
         {% block app_content %}{% endblock %}
     </div>

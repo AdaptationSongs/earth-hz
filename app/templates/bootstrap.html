@@ -19,7 +19,9 @@
   </head>
   <body>
     <!-- Navigation bar -->
-    {% block navbar %}{% endblock %}
+    <div id="wrapper-navbar" itemscope="" itemtype="http://schema.org/WebSite" class="fixed-top">
+        {% block navbar %}{% endblock %}
+    </div>
 
     <!-- Your page content -->
     {% block content %}{% endblock %}

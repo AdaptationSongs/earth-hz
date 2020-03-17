@@ -2,20 +2,40 @@
 {% from 'bootstrap/form.html' import render_form %}
 {% from 'bootstrap/pagination.html' import render_pagination %}
 
+{% block navbar %}
+    {{ super() }}
+    <audio controls="controls" class="w-100">
+        Please upgrade your browser.
+    </audio>
+{% endblock %}
+
 {% block app_content %}
-    {{ render_form(filter_form, form_type='horizontal') }}
+    <div class="row h-100">
+        <div class="col-6 mh-100 overflow-auto">
+            {{ render_form(filter_form, form_type='horizontal') }}
 
-    {% for file in files.items %}
-        <div class="card mt-3 mb-3">
-            <div class="card-body">
-                <p class="card-text">Start time: {{ file.timestamp }}</p>
-                <p class="card-text">Recording device: {{ file.sn }}</p>
-                <a class="btn btn-primary" href="javascript:void(0)" onclick="playStream('{{file.name}}')" >Play file</a>
-            </div>
+            {% for file in files.items %}
+                <div class="card mt-3 mb-3">
+                    <div class="card-body">
+                        <p class="card-text">Start time: {{ file.timestamp }}</p>
+                        <p class="card-text">Recording device: {{ file.sn }}</p>
+                        <a class="btn btn-primary" href="javascript:void(0)" onclick="playStream('{{file.name}}')" >Play file</a>
+                    </div>
+                </div>
+            {% endfor %}
+
+            {{ render_pagination(files, args=filters) }}
         </div>
-    {% endfor %}
 
-    {{ render_pagination(files, args=filters) }}
+        <div class="col-6 mh-100 bg-light ">
+            <div>Current clip:</div>
+            <div><span id="current-file"></span> <span id="current-offset"></span></div>
+            <a id="replay-btn" class="btn btn-primary disabled" href="javascript:void(0)">Replay</a>
+            <a id="label-btn" class="btn btn-primary disabled" href="javascript:void(0)">Label</a>
+            <div><img id="spec-img" class="img-fluid d-none"></div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block scripts %}

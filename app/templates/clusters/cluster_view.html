@@ -2,6 +2,13 @@
 {% from 'bootstrap/form.html' import render_form %}
 {% from 'bootstrap/pagination.html' import render_pagination %}
 
+{% block navbar %}
+    {{ super() }}
+    <audio controls="controls" class="w-100 bg-light">
+        Please upgrade your browser.
+    </audio>
+{% endblock %}
+
 {% block app_content %}
     {{ render_form(filter_form, form_type='horizontal') }}
 
