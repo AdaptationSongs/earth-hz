@@ -21,8 +21,5 @@ flask run
 ### Or
 See https://flask.palletsprojects.com/en/1.1.x/tutorial/deploy/ and https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-xvii-deployment-on-linux for suggestions on deploying to a production server.
 
-## Warning!
-Access controls have not been implemented yet. Not recommended for installation on public servers.
-
 ## Framework
 * [Flask](http://flask.pocoo.org/)

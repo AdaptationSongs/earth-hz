@@ -12,13 +12,8 @@ class Config(object):
     CLIP_SECS = 5
 
     # Google OAuth
-    CLIENT_ID =
-    CLIENT_SECRET =
-    REDIRECT_URI =
-    AUTH_URI = 'https://accounts.google.com/o/oauth2/auth'
-    TOKEN_URI = 'https://accounts.google.com/o/oauth2/token'
-    USER_INFO = 'https://www.googleapis.com/userinfo/v2/me'
-    SCOPE = ['profile', 'email']
+    GOOGLE_OAUTH_CLIENT_ID =
+    GOOGLE_OAUTH_CLIENT_SECRET =
 
     # Azure Data Lake
     ADLS_ACCOUNT =
