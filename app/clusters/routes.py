@@ -3,6 +3,7 @@ from flask import render_template, flash, redirect, url_for, request, g, \
 from flask_login import current_user, login_required
 from app import db
 from app.models import User, AudioFile, Cluster, ClusterGroup
+from app.user.roles import admin_permission
 from app.clusters import bp
 from app.clusters.forms import FilterClustersForm, DeleteForm
 from app.clusters.forms import UploadForm
@@ -11,6 +12,7 @@ import pandas as pd
 
 @bp.route('/clusters')
 @login_required
+@admin_permission.require(http_exception=403)
 def cluster_groups():
     delete_form = DeleteForm()
     page = request.args.get('page', 1, type=int)
@@ -21,6 +23,7 @@ def cluster_groups():
 
 @bp.route('/clusters/<group_id>', methods=['GET', 'POST'])
 @login_required
+@admin_permission.require(http_exception=403)
 def list_clusters(group_id):
     page = request.args.get('page', 1, type=int)
     filter_form = FilterClustersForm()
@@ -40,6 +43,7 @@ def list_clusters(group_id):
 
 @bp.route('/clusters/<group_id>/<cluster_name>', methods=['GET', 'POST'])
 @login_required
+@admin_permission.require(http_exception=403)
 def view_cluster(group_id, cluster_name):
     page = request.args.get('page', 1, type=int)
     filter_form = FilterClustersForm()
@@ -59,6 +63,7 @@ def view_cluster(group_id, cluster_name):
 
 @bp.route('/clusters/upload', methods=['GET', 'POST'])
 @login_required
+@admin_permission.require(http_exception=403)
 def upload():
     form = UploadForm()
     if form.validate_on_submit():
@@ -77,6 +82,7 @@ def upload():
 
 @bp.route('/clusters/<group_id>/delete', methods=['POST'])
 @login_required
+@admin_permission.require(http_exception=403)
 def delete_clusters(group_id):
     group = ClusterGroup.query.get(group_id)
     if (group.user == current_user):

@@ -1,7 +1,7 @@
 from flask_login import UserMixin
+from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 from datetime import datetime, timedelta
-from app import db, login, admin
-from flask_admin.contrib.sqla import ModelView
+from app import db, login
 from flask import current_app
 
 # DB Models
@@ -15,6 +15,7 @@ class User(db.Model, UserMixin):
     avatar = db.Column(db.String(200))
     tokens = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
+    admin = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return self.name
@@ -23,7 +24,11 @@ class User(db.Model, UserMixin):
 def load_user(id):
     return User.query.get(int(id))
 
-admin.add_view(ModelView(User, db.session))
+
+class OAuth(OAuthConsumerMixin, db.Model):
+    provider_user_id = db.Column(db.String(256), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
+    user = db.relationship(User)
 
 
 class MonitoringStation(db.Model):
@@ -41,8 +46,6 @@ class MonitoringStation(db.Model):
     def __repr__(self):
         return self.name
 
-admin.add_view(ModelView(MonitoringStation, db.session))
-
 
 class EquipmentType(db.Model):
     __tablename__ = 'equipment_types'
@@ -51,8 +54,6 @@ class EquipmentType(db.Model):
 
     def __repr__(self):
         return self.name
-
-admin.add_view(ModelView(EquipmentType, db.session))
 
 
 class Equipment(db.Model):
@@ -72,8 +73,6 @@ class Equipment(db.Model):
     def __repr__(self):
         return self.serial_number
 
-admin.add_view(ModelView(Equipment, db.session))
-
 
 class AudioFile(db.Model):
     __tablename__ = 'audio_files'
@@ -92,8 +91,6 @@ class ClusterGroup(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey(User.id))
     user = db.relationship('User')
     clusters = db.relationship('Cluster', back_populates='group', cascade='all, delete, delete-orphan')
-
-#admin.add_view(ModelView(ClusterGroup, db.session))
 
 
 class Cluster(db.Model):
@@ -133,8 +130,6 @@ class LabelType(db.Model):
     def __repr__(self):
         return self.name
 
-admin.add_view(ModelView(LabelType, db.session))
-
 
 class Label(db.Model):
     __tablename__ = 'labels'
@@ -146,8 +141,6 @@ class Label(db.Model):
     def __repr__(self):
         return self.name
 
-admin.add_view(ModelView(Label, db.session))    
-
 
 class Language(db.Model):
     __tablename__ = 'language'
@@ -157,8 +150,6 @@ class Language(db.Model):
 
     def __repr__(self):
         return self.name
-
-admin.add_view(ModelView(Language, db.session))
 
 
 class CommonName(db.Model):
@@ -170,8 +161,6 @@ class CommonName(db.Model):
     language = db.relationship('Language')
     name = db.Column(db.String(255), nullable=False)
     notes = db.Column(db.String(255), nullable=True)
-
-admin.add_view(ModelView(CommonName, db.session))
 
 
 class LabeledClip(db.Model):

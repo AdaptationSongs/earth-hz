@@ -9,9 +9,9 @@
 
 {% block title %}
     {% if title %}
-        {{ title }} - Songs of Adaptation
+        {{ title }} - Earth Hz
     {% else %}
-        Welcome to Songs of Adaptation
+        Welcome to Earth Hz
     {% endif %}
 {% endblock %}
 
@@ -19,7 +19,7 @@
     <a class="skip-link sr-only sr-only-focusable" href="#content">Skip to content</a>
     <nav class="navbar navbar-expand-md navbar-light bg-light">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">Songs of Adaptation</a>
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">Earth Hz</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -27,6 +27,14 @@
                 {{ render_nav_item('audio.list_files', 'Recordings') }}
                 {{ render_nav_item('clusters.cluster_groups', 'Clusters') }}
                 {{ render_nav_item('labels.list_labels', 'Labels') }}
+                {% if current_user.is_authenticated and current_user.admin %}
+                    {{ render_nav_item('admin.index', 'Admin') }}
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                    {{ render_nav_item('user_views.logout', 'Log out') }}
+                {% else %}
+                    {{ render_nav_item('user_views.login', 'Log in') }}
+                {% endif %}
             </div>
         </div><!-- .container -->
     </nav><!-- .site-navigation -->

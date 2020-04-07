@@ -3,6 +3,7 @@ from flask import render_template, flash, redirect, url_for, request, g, \
 from flask_login import current_user, login_required
 from app import db
 from app.models import User, AudioFile, Label, LabelType, LabeledClip
+from app.user.roles import admin_permission
 from app.labels import bp
 from app.labels.forms import FilterLabelsForm, EditLabelForm, DeleteLabelForm
 from datetime import datetime
@@ -10,6 +11,7 @@ from datetime import datetime
 
 @bp.route('/labels', methods=['GET', 'POST'])
 @login_required
+@admin_permission.require(http_exception=403)
 def list_labels():
     page = request.args.get('page', 1, type=int)
     filter_form = FilterLabelsForm()
@@ -29,6 +31,7 @@ def list_labels():
 
 @bp.route('/clip/<file_name>/<offset>', methods=['GET', 'POST'])
 @login_required
+@admin_permission.require(http_exception=403)
 def view_clip(file_name, offset):
     delete_form = DeleteLabelForm()
     form = EditLabelForm()
