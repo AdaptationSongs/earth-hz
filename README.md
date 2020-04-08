@@ -2,15 +2,14 @@
 User-friendly web framework for sharing and collaborative labeling of bioacoustic data.
 
 ## Features
-* Upload raw WAV files from audio recorders to cloud storage (currently supports Azure Data Lake)
+* Imports raw WAV files from audio recorders uploaded to cloud storage (currently supports Azure Data Lake)
 * Generates MP3 or Ogg stream on the fly, supports playback in any HTML5 compatible browser
-* Import cluster files from Wildlife Acoustics Kaleidoscope 
+* Imports cluster files from Wildlife Acoustics Kaleidoscope 
 
 ## Installation
 ```bash
 apt-get install ffmpeg libavcodec-extra
 pip install -r requirements.txt
-cp config.default.py config.py
 ```
 
 ## Running
