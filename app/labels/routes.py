@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for, request, g, \
     jsonify, current_app, Response
 from flask_login import current_user, login_required
 from app import db
-from app.models import User, AudioFile, Label, LabelType, LabeledClip
+from app.models import User, AudioFile, Label, LabelType, LabeledClip, Equipment, MonitoringStation, Project, ProjectLabel
 from app.user.roles import admin_permission
 from app.labels import bp
 from app.labels.forms import FilterLabelsForm, EditLabelForm, DeleteLabelForm
@@ -10,20 +10,31 @@ from datetime import datetime
 
 
 @bp.route('/labels', methods=['GET', 'POST'])
+@bp.route('/labels/project/<project_id>', methods=['GET', 'POST'])
 @login_required
 @admin_permission.require(http_exception=403)
-def list_labels():
+def list_labels(project_id=None):
     page = request.args.get('page', 1, type=int)
     filter_form = FilterLabelsForm()
-    filter_form.select_label.query = Label.query
+    fq = Label.query
+    q = LabeledClip.query.join(AudioFile).join(Label)
+
+    if project_id:
+        q = q.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).join(Project).filter(Project.id == project_id)
+        fq = fq.join(ProjectLabel, Label.id == ProjectLabel.label_id).join(Project).filter(Project.id == project_id)
+
+    filter_form.select_label.query = fq
+
     if request.method == 'POST':
-        selected_label = filter_form.select_label.data
+        selected_label = filter_form.select_label.data.id if filter_form.select_label.data else None
     else:
         selected_label = request.args.get('label', type=int)
+
     if selected_label:
-        clips = LabeledClip.query.filter_by(label=selected_label).join(LabeledClip.file).order_by(AudioFile.timestamp).order_by(LabeledClip.offset).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-    else:
-        clips = LabeledClip.query.join(LabeledClip.file).order_by(AudioFile.timestamp).order_by(LabeledClip.offset).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
+        q = q.filter(Label.id == selected_label)
+        print(q)
+    
+    clips = q.order_by(AudioFile.timestamp).order_by(LabeledClip.offset).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
 
     filters = {'label': selected_label}
     return render_template('labels/label_list.html', title='Labels', clips=clips, filter_form=filter_form, filters=filters)

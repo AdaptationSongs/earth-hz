@@ -3,7 +3,7 @@ from flask import render_template, flash, redirect, url_for, request, g, \
 from flask_login import current_user, login_required
 from sqlalchemy import extract
 from app import db
-from app.models import User, AudioFile, Equipment, MonitoringStation
+from app.models import User, AudioFile, Equipment, MonitoringStation, Project
 from app.audio import bp
 from app.audio.forms import FilterForm
 import io
@@ -150,11 +150,20 @@ def spectro(file_name, offset):
 
 
 @bp.route('/files', methods=['GET', 'POST'])
+@bp.route('/files/project/<project_id>', methods=['GET', 'POST'])
 @login_required
-def list_files():
+def list_files(project_id=None):
     filter_form = FilterForm()
-    filter_form.select_station.query = MonitoringStation.query.all()
     q = AudioFile.query
+    fq = MonitoringStation.query
+
+    if project_id:
+        q = q.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).join(Project).filter(Project.id == project_id)
+        fq = fq.join(Project).filter(Project.id == project_id)
+    else:
+        fq = fq.all()
+    filter_form.select_station.query = fq
+
     if filter_form.validate_on_submit():
         page = 1
         station = filter_form.select_station.data.id if filter_form.select_station.data else None
@@ -172,7 +181,10 @@ def list_files():
         from_hour = request.args.get('from', type=int)
         until_hour = request.args.get('until', type=int)
 
-    if station: q = q.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.id == station)
+    if station:
+        if not project_id:
+            q = q.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation)
+        q = q.filter(MonitoringStation.id == station)
     if after: q = q.filter(AudioFile.timestamp >= after)
     if before: q = q.filter(AudioFile.timestamp <= before)
     if from_hour: q = q.filter(extract('hour', AudioFile.timestamp) >= from_hour)

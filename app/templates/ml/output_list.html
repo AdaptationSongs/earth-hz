@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from 'bootstrap/form.html' import render_form %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+
+{% block navbar %}
+    {{ super() }}
+    <audio controls="controls" class="w-100 bg-light">
+        Please upgrade your browser.
+    </audio>
+{% endblock %}
+
+{% block app_content %}
+    <a href="{{ url_for('ml.upload_single_label', project_id=project_id) }}" class="btn btn-primary">Upload single label</a>
+
+    {{ render_form(filter_form, form_type='horizontal') }}
+
+    {% for prediction in predictions.items %}
+        <div class="card mt-3 mb-3">
+            <div class="card-body row">
+                <div class="col-md-6">
+                    <a class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ prediction.file.name }}', '{{ prediction.offset }}')">Play clip</a>
+                    <p class="card-text">Time: {{ prediction.start_time() }}</p>
+                    <p class="card-text">Recording device: {{ prediction.file.sn }}</p>
+                    <p class="card-text">Predicted label: {{ prediction.label }}</p>
+                    <p class="card-text">Probability: {{ prediction.probability }}</p>
+                    <p class="card-text">Manual labels: <ul>
+                        {% for clip in prediction.labeled_clips() %}
+                            <li>{{ clip.label.name }}</li>
+                        {% endfor %}
+                    </ul></p>
+                    <a class="btn btn-primary" href="{{ url_for('labels.view_clip', file_name=prediction.file.name, offset=prediction.offset) }}">Label</a>
+                </div>
+                <div class="col-md-6">
+                    <img class="card-img-top" src="{{ url_for('audio.spectro', file_name=prediction.file_name, offset=prediction.offset) }}">
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    {{ render_pagination(predictions, args=filters) }}
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script type="text/javascript" src="/static/audio-functions.js"></script>
+{% endblock %}

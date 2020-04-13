@@ -10,7 +10,7 @@
             <div class="card-body">
                 <h5 class="card-title">{{ cluster.cluster_name }}</h5>
                 <p class="card-text">{{ cluster.name_count() }} clips</p>
-                <a class="btn btn-primary" href="{{ cluster.cg_id  }}/{{ cluster.cluster_name }}">Browse clips</a></a>
+                <a class="btn btn-primary" href="{{ url_for('clusters.view_cluster', group_id=cluster.cg_id, cluster_name=cluster.cluster_name) }}">Browse clips</a>
             </div>
         </div>
     {% endfor %}
@@ -18,6 +18,3 @@
     {{ render_pagination(clusters, args=filters) }}
 {% endblock %}
 
-{% block scripts %}
-    {{ super() }}
-{% endblock %}

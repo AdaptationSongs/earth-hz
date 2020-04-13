@@ -39,7 +39,7 @@ def create_app(config_class=Config):
 
     # register blueprints
     from app.user.google import bp as google_bp
-    app.register_blueprint(google_bp, url_prefix="/login")
+    app.register_blueprint(google_bp, url_prefix='/login')
 
     from app.user import bp as user_bp
     app.register_blueprint(user_bp, url_prefix='/user')
@@ -50,6 +50,9 @@ def create_app(config_class=Config):
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
 
+    from app.projects import bp as projects_bp
+    app.register_blueprint(projects_bp, url_prefix='/projects')
+
     from app.audio import bp as audio_bp
     app.register_blueprint(audio_bp)
 
@@ -58,6 +61,9 @@ def create_app(config_class=Config):
 
     from app.labels import bp as labels_bp
     app.register_blueprint(labels_bp)
+
+    from app.ml import bp as ml_bp
+    app.register_blueprint(ml_bp, url_prefix='/ml')
 
     return app
 

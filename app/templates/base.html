@@ -24,9 +24,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div id="navbarNavDropdown" class="collapse navbar-collapse">
-                {{ render_nav_item('audio.list_files', 'Recordings') }}
-                {{ render_nav_item('clusters.cluster_groups', 'Clusters') }}
-                {{ render_nav_item('labels.list_labels', 'Labels') }}
+                {{ render_nav_item('projects.list', 'Projects') }}
                 {% if current_user.is_authenticated and current_user.admin %}
                     {{ render_nav_item('admin.index', 'Admin') }}
                 {% endif %}
@@ -47,7 +45,3 @@
     </div>
 {% endblock %}
 
-{% block scripts %}
-    {{ super() }}
-    <script type="text/javascript" src="/static/jquery-3.4.1.js"></script>
-{% endblock %}

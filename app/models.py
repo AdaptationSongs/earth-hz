@@ -13,7 +13,6 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=True)
     avatar = db.Column(db.String(200))
-    tokens = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
     admin = db.Column(db.Boolean, default=False)
 
@@ -31,9 +30,22 @@ class OAuth(OAuthConsumerMixin, db.Model):
     user = db.relationship(User)
 
 
+class Project(db.Model):
+    __tablename__ = 'projects'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    country = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.String(255))
+
+    def __repr__(self):
+        return self.name
+
+
 class MonitoringStation(db.Model):
     __tablename__ = 'monitoring_stations'
     id = db.Column(db.Integer, primary_key=True, nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey(Project.id))
+    project = db.relationship('Project')
     name = db.Column(db.String(255), nullable=False)
     attachment_point = db.Column(db.String(255))
     details = db.Column(db.String(255))
@@ -87,6 +99,8 @@ class AudioFile(db.Model):
 class ClusterGroup(db.Model):
     __tablename__ = 'cluster_groups'
     id = db.Column(db.Integer, primary_key=True, nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey(Project.id))
+    project = db.relationship('Project')
     name = db.Column(db.String(255), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey(User.id))
     user = db.relationship('User')
@@ -162,6 +176,9 @@ class CommonName(db.Model):
     name = db.Column(db.String(255), nullable=False)
     notes = db.Column(db.String(255), nullable=True)
 
+    def __repr__(self):
+        return self.name
+
 
 class LabeledClip(db.Model):
     __tablename__ = 'labeled_clips'
@@ -179,3 +196,55 @@ class LabeledClip(db.Model):
 
     def start_time(self):
         return str(self.file.timestamp + timedelta(seconds=self.offset))
+
+
+class ProjectLabel(db.Model):
+    __tablename__ = 'project_labels'
+    id = db.Column(db.Integer, primary_key=True)
+    label_id = db.Column(db.Integer, db.ForeignKey(Label.id), nullable=False)
+    label = db.relationship('Label')
+    project_id = db.Column(db.Integer, db.ForeignKey(Project.id), nullable=False)
+    project = db.relationship('Project')
+
+
+class MLModel(db.Model):
+    __tablename__ = 'ml_models'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey(Project.id), nullable=False)
+    project = db.relationship('Project')
+    name = db.Column(db.String(255))
+
+    def __repr__(self):
+        return self.name
+
+
+class ModelIteration(db.Model):
+    __tablename__ = 'model_iterations'
+    id = db.Column(db.Integer, primary_key=True)
+    model_id = db.Column(db.Integer, db.ForeignKey(MLModel.id), nullable=False)
+    model = db.relationship('MLModel')
+    training_date = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
+    description = db.Column(db.String(255))
+
+    def __repr__(self):
+        return self.model.name + ': ' + str(self.training_date)
+
+
+class ModelOutput(db.Model):
+    __tablename__ = 'model_outputs'
+    id = db.Column(db.Integer, primary_key=True)
+    iteration_id = db.Column(db.Integer, db.ForeignKey(ModelIteration.id), nullable=False)
+    iteration = db.relationship('ModelIteration')
+    file_name = db.Column(db.String(255), db.ForeignKey(AudioFile.name), nullable=False)
+    file = db.relationship('AudioFile')
+    label_id = db.Column(db.Integer, db.ForeignKey(Label.id), nullable=False)
+    label = db.relationship('Label')
+    offset = db.Column(db.Float, nullable=False)
+    duration = db.Column(db.Float, nullable=False)
+    probability = db.Column(db.Float, nullable=False)
+
+    def start_time(self):
+        return str(self.file.timestamp + timedelta(seconds=self.offset))
+
+    def labeled_clips(self):
+        return LabeledClip.query.filter_by(file_name=self.file_name, offset=self.offset).all()

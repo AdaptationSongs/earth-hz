@@ -11,6 +11,14 @@
 
 {% block app_content %}
     <div class="row h-100">
+        <div class="col-6 mh-100 bg-light ">
+            <div>Current clip:</div>
+            <div><span id="current-file"></span> <span id="current-offset"></span></div>
+            <a id="replay-btn" class="btn btn-primary disabled" href="javascript:void(0)">Replay</a>
+            <a id="label-btn" class="btn btn-primary disabled" href="javascript:void(0)">Label</a>
+            <div><img id="spec-img" class="img-fluid d-none"></div>
+        </div>
+
         <div class="col-6 mh-100 overflow-auto">
             {{ render_form(filter_form, form_type='horizontal') }}
 
@@ -27,13 +35,6 @@
             {{ render_pagination(files, args=filters) }}
         </div>
 
-        <div class="col-6 mh-100 bg-light ">
-            <div>Current clip:</div>
-            <div><span id="current-file"></span> <span id="current-offset"></span></div>
-            <a id="replay-btn" class="btn btn-primary disabled" href="javascript:void(0)">Replay</a>
-            <a id="label-btn" class="btn btn-primary disabled" href="javascript:void(0)">Label</a>
-            <div><img id="spec-img" class="img-fluid d-none"></div>
-        </div>
     </div>
 
 {% endblock %}

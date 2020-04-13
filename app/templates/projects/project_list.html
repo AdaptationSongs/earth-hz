@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+
+{% block app_content %}
+
+    {% for project in projects.items %}
+        <div class="card mt-3 mb-3">
+            <div class="card-body row">
+                <h5 class="card-title col-12">{{ project.name }}</h5>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a class="btn btn-primary" href="{{ url_for('audio.list_files', project_id=project.id) }}">Listen to full recordings</a>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a class="btn btn-primary" href="{{ url_for('clusters.cluster_groups', project_id=project.id) }}">Browse sound clusters</a>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a class="btn btn-primary" href="{{ url_for('labels.list_labels', project_id=project.id) }}">View labels</a>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a class="btn btn-primary" href="{{ url_for('ml.list_outputs', project_id=project.id) }}">Verify outputs</a>
+                </div>                
+            </div>
+        </div>
+    {% endfor %}
+
+    {{ render_pagination(projects) }}
+{% endblock %}
+

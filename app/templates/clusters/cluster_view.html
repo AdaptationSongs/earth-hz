@@ -25,10 +25,10 @@
                             <li>{{ clip.label.name }}</li>
                         {% endfor %}
                     </ul></p>
-                    <a class="btn btn-primary" href="/clip/{{ cluster.file.name }}/{{ cluster.nearest_window() }}">Label</a>
+                    <a class="btn btn-primary" href="{{ url_for('labels.view_clip', file_name=cluster.file.name, offset=cluster.nearest_window()) }}">Label</a>
                 </div>
                 <div class="col-md-6">
-                    <img class="card-img-top" src="/spectrogram/{{ cluster.file_name }}-{{ cluster.nearest_window() }}.png">
+                    <img class="card-img-top" src="{{ url_for('audio.spectro', file_name=cluster.file_name, offset=cluster.nearest_window()) }}">
                 </div>
             </div>
         </div>

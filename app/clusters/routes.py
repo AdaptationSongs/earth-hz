@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, url_for, request, g, \
     jsonify, current_app, Response
 from flask_login import current_user, login_required
 from app import db
-from app.models import User, AudioFile, Cluster, ClusterGroup
+from app.models import User, AudioFile, Cluster, ClusterGroup, Project
 from app.user.roles import admin_permission
 from app.clusters import bp
 from app.clusters.forms import FilterClustersForm, DeleteForm
@@ -11,12 +11,16 @@ import pandas as pd
 
 
 @bp.route('/clusters')
+@bp.route('/clusters/project/<project_id>')
 @login_required
 @admin_permission.require(http_exception=403)
-def cluster_groups():
+def cluster_groups(project_id=None):
     delete_form = DeleteForm()
     page = request.args.get('page', 1, type=int)
-    groups = ClusterGroup.query.order_by(ClusterGroup.name).paginate(
+    q = ClusterGroup.query
+    if project_id:
+        q = q.join(Project).filter(Project.id == project_id)
+    groups = q.order_by(ClusterGroup.name).paginate(
             page, current_app.config['ITEMS_PER_PAGE'], False)
     return render_template('clusters/cluster_groups.html', title='All cluster groups', groups=groups, delete_form=delete_form)
 

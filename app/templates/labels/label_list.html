@@ -14,13 +14,18 @@
 
     {% for clip in clips.items %}
         <div class="card mt-3 mb-3">
-            <div class="card-body">
-                <a  class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ clip.file.name }}', '{{ clip.offset }}')">Play clip</a>
-                <h5 class="card-title">{{ clip.label.name }}</h5>
-                <p class="card-text">Start time: {{ clip.start_time() }}</p>
-                <p class="card-text">Recording device: {{ clip.file.sn }}</p>
-                <p class="card-text">submitted by {{ clip.user }} on {{ clip.modified }}</p>
-                <a  class="btn btn-primary" href="/clip/{{ clip.file.name }}/{{ clip.offset }}">Edit Labels</a>
+            <div class="card-body row">
+                <div class="col-md-6">
+                    <a class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ clip.file.name }}', '{{ clip.offset }}')">Play clip</a>
+                    <h5 class="card-title">{{ clip.label.name }}</h5>
+                    <p class="card-text">Start time: {{ clip.start_time() }}</p>
+                    <p class="card-text">Recording device: {{ clip.file.sn }}</p>
+                    <p class="card-text">submitted by {{ clip.user }} on {{ clip.modified }}</p>
+                    <a class="btn btn-primary" href="{{ url_for('labels.view_clip', file_name=clip.file.name, offset=clip.offset) }}">Edit Labels</a>
+                </div>
+                <div class="col-md-6">
+                    <img class="card-img-top" src="{{ url_for('audio.spectro', file_name=clip.file_name, offset=clip.offset) }}">
+                </div>
             </div>
         </div>
     {% endfor %}
