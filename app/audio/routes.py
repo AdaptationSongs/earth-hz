@@ -25,7 +25,6 @@ def get_clip(file_name, offset):
     wav_file = AudioFile.query.filter_by(name=file_name).first()
     fpath = wav_file.path + '/' + wav_file.name
     vfs = get_azure_vfs()
-
     with vfs.open(fpath) as f:
         with sf.SoundFile(f) as sf_desc:
             sr = sf_desc.samplerate
@@ -43,17 +42,14 @@ def get_clip(file_name, offset):
 def get_byte_range(req, full_size):
     byte1, byte2 = 0, None
     range_header = req.headers.get('Range', None)
-
     if (range_header):
         m = re.search('(\d+)-(\d*)', range_header)
         g = m.groups()
         if g[0]: byte1 = int(g[0])
         if g[1]: byte2 = int(g[1])
-
     length = full_size - byte1
     if byte2 is not None:
         length = byte2 + 1 - byte1
-
     return byte1, byte2, length
 
 
@@ -64,7 +60,6 @@ def compress_audio(file_handle, file_type):
     else:
         output_format = 'mp3'
         output_mime = 'audio/mpeg'
-
     segment = AudioSegment.from_file(file_handle, format='wav')
     tmp_f = io.BytesIO()
     segment.export(tmp_f, output_format)
@@ -84,12 +79,10 @@ def stream_wav(file_name):
     wav_file = AudioFile.query.filter_by(name=file_name).first()
     size = wav_file.size
     byte1, byte2, length = get_byte_range(request, size)
-
     vfs = get_azure_vfs()
     with vfs.open(wav_file.path+'/'+wav_file.name) as f:
         f.seek(byte1)
         data = f.read(length)
-
     response = Response(data,
         206,
         mimetype='audio/x-wav',
@@ -102,16 +95,13 @@ def stream_wav(file_name):
 @login_required
 def stream_compressed(file_name, file_type):
     wav_file = AudioFile.query.filter_by(name=file_name).first()
-
     vfs = get_azure_vfs()
     with vfs.open(wav_file.path+'/'+wav_file.name) as f:
         out_f, output_mime = compress_audio(f, file_type)
-
     size = sys.getsizeof(out_f)
     byte1, byte2, length = get_byte_range(request, size)
     out_f.seek(byte1)
     data = out_f.read(length)
-
     response = Response(data,
         206,
         mimetype=output_mime,
@@ -144,54 +134,36 @@ def spectro(file_name, offset):
     fig.colorbar(ax.collections[0], format='%+2.0f dB')
     out_f = io.BytesIO()
     canvas.print_png(out_f)
-
     response = Response(out_f.getvalue(), mimetype='image/png')
     return response
 
 
-@bp.route('/files', methods=['GET', 'POST'])
-@bp.route('/files/project/<project_id>', methods=['GET', 'POST'])
+@bp.route('/files')
+@bp.route('/files/project/<project_id>')
 @login_required
 def list_files(project_id=None):
-    filter_form = FilterForm()
-    q = AudioFile.query
+    page = request.args.get('page', 1, type=int)
+    filter_form = FilterForm(request.args)
+    q = AudioFile.query.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation)
     fq = MonitoringStation.query
-
     if project_id:
-        q = q.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).join(Project).filter(Project.id == project_id)
-        fq = fq.join(Project).filter(Project.id == project_id)
+        q = q.filter(MonitoringStation.project_id == project_id)
+        fq = fq.filter(MonitoringStation.project_id == project_id)
     else:
         fq = fq.all()
     filter_form.select_station.query = fq
-
-    if filter_form.validate_on_submit():
-        page = 1
-        station = filter_form.select_station.data.id if filter_form.select_station.data else None
-        after = filter_form.after.data
-        before = filter_form.before.data
-        from_hour = filter_form.from_hour.data
-        until_hour = filter_form.until_hour.data
-    else:
-        page = request.args.get('page', 1, type=int)
-        station = request.args.get('station', type=int)
-        after_str = request.args.get('after', type=str)
-        after = datetime.strptime(after_str, '%Y-%m-%d').date() if after_str else None
-        before_str = request.args.get('before', type=str)
-        before = datetime.strptime(before_str, '%Y-%m-%d').date() if before_str else None
-        from_hour = request.args.get('from', type=int)
-        until_hour = request.args.get('until', type=int)
-
-    if station:
-        if not project_id:
-            q = q.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation)
-        q = q.filter(MonitoringStation.id == station)
-    if after: q = q.filter(AudioFile.timestamp >= after)
-    if before: q = q.filter(AudioFile.timestamp <= before)
-    if from_hour: q = q.filter(extract('hour', AudioFile.timestamp) >= from_hour)
-    if until_hour: q = q.filter(extract('hour', AudioFile.timestamp) < until_hour)
-
+    if filter_form.validate():
+        if filter_form.select_station.data:
+            q = q.filter(MonitoringStation.id == filter_form.select_station.data.id)
+        if filter_form.after.data:
+            q = q.filter(AudioFile.timestamp >= filter_form.after.data)
+        if filter_form.before.data:
+            q = q.filter(AudioFile.timestamp <= filter_form.before.data)
+        if filter_form.from_hour.data:
+            q = q.filter(extract('hour', AudioFile.timestamp) >= filter_form.from_hour.data)
+        if filter_form.until_hour.data:
+            q = q.filter(extract('hour', AudioFile.timestamp) < filter_form.until_hour.data) 
     files = q.order_by(AudioFile.timestamp).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-    filters = {'station':station, 'after':after, 'before':before, 'from':from_hour, 'until':until_hour}
-    return render_template('audio/file_list.html', title='Browse all wav files', files=files, filter_form=filter_form, filters=filters)
+    return render_template('audio/file_list.html', title='Browse all wav files', files=files, filter_form=filter_form)
 
 

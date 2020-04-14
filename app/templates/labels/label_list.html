@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block app_content %}
-    {{ render_form(filter_form, form_type='horizontal') }}
+    {{ render_form(filter_form, method='get', form_type='horizontal') }}
 
     {% for clip in clips.items %}
         <div class="card mt-3 mb-3">
@@ -30,7 +30,7 @@
         </div>
     {% endfor %}
 
-    {{ render_pagination(clips, args=filters) }}
+    {{ render_pagination(clips) }}
 {% endblock %}
 
 {% block scripts %}

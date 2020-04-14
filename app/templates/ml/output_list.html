@@ -12,7 +12,7 @@
 {% block app_content %}
     <a href="{{ url_for('ml.upload_single_label', project_id=project_id) }}" class="btn btn-primary">Upload single label</a>
 
-    {{ render_form(filter_form, form_type='horizontal') }}
+    {{ render_form(filter_form, method='get', form_type='horizontal') }}
 
     {% for prediction in predictions.items %}
         <div class="card mt-3 mb-3">
@@ -37,7 +37,7 @@
         </div>
     {% endfor %}
 
-    {{ render_pagination(predictions, args=filters) }}
+    {{ render_pagination(predictions) }}
 {% endblock %}
 
 {% block scripts %}

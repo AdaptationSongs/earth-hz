@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import Form, SelectField, SubmitField, StringField
-from wtforms.validators import InputRequired
+from wtforms.validators import InputRequired, Optional
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 
@@ -10,7 +10,7 @@ def manual_id(row):
 
 
 class FilterForm(FlaskForm):
-    select_label = QuerySelectField('Label:')
+    select_label = QuerySelectField('Label:', validators=[Optional()], allow_blank=True, blank_text='(All)')
     submit_button = SubmitField('Filter results')
 
 

@@ -5,7 +5,7 @@ from app import db
 from app.models import User, AudioFile, Cluster, ClusterGroup, Project
 from app.user.roles import admin_permission
 from app.clusters import bp
-from app.clusters.forms import FilterClustersForm, DeleteForm
+from app.clusters.forms import FilterForm, DeleteForm
 from app.clusters.forms import UploadForm
 import pandas as pd
 
@@ -25,44 +25,34 @@ def cluster_groups(project_id=None):
     return render_template('clusters/cluster_groups.html', title='All cluster groups', groups=groups, delete_form=delete_form)
 
 
-@bp.route('/clusters/<group_id>', methods=['GET', 'POST'])
+@bp.route('/clusters/<group_id>')
 @login_required
 @admin_permission.require(http_exception=403)
 def list_clusters(group_id):
     page = request.args.get('page', 1, type=int)
-    filter_form = FilterClustersForm()
+    filter_form = FilterForm(request.args)
     filter_form.select_label.query = Cluster.query.filter_by(cg_id=group_id).distinct(Cluster.label)
-    if filter_form.validate_on_submit():
-        selected_label = filter_form.select_label.data.label
-    else:
-        selected_label = request.args.get('label', type=str)
-    if selected_label:
-        clusters = Cluster.query.filter_by(cg_id=group_id, label=selected_label).distinct(Cluster.cluster_name).order_by(Cluster.cluster_name).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-    else:
-        clusters = Cluster.query.filter_by(cg_id=group_id).distinct(Cluster.cluster_name).order_by(Cluster.cluster_name).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-
-    filters = {'label': selected_label}
-    return render_template('clusters/cluster_list.html', title='Sound clusters in group', clusters=clusters, filter_form=filter_form, filters=filters)
+    q = Cluster.query.filter(Cluster.cg_id == group_id)
+    if filter_form.validate():
+        if filter_form.select_label.data:
+            q = q.filter(Cluster.label == filter_form.select_label.data.label)
+    clusters = q.distinct(Cluster.cluster_name).order_by(Cluster.cluster_name).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
+    return render_template('clusters/cluster_list.html', title='Sound clusters in group', clusters=clusters, filter_form=filter_form)
 
 
-@bp.route('/clusters/<group_id>/<cluster_name>', methods=['GET', 'POST'])
+@bp.route('/clusters/<group_id>/<cluster_name>')
 @login_required
 @admin_permission.require(http_exception=403)
 def view_cluster(group_id, cluster_name):
     page = request.args.get('page', 1, type=int)
-    filter_form = FilterClustersForm()
+    filter_form = FilterForm(request.args)
     filter_form.select_label.query = Cluster.query.filter_by(cg_id=group_id, cluster_name=cluster_name).distinct(Cluster.label)
-    if filter_form.validate_on_submit():
-        selected_label = filter_form.select_label.data.label
-    else:
-        selected_label = request.args.get('label', type=str)
-    if selected_label:
-        clusters = Cluster.query.filter_by(cg_id=group_id, cluster_name=cluster_name, label=selected_label).join(Cluster.file).order_by(AudioFile.timestamp).order_by(Cluster.start).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-    else:
-        clusters = Cluster.query.filter_by(cg_id=group_id, cluster_name=cluster_name).join(Cluster.file).order_by(AudioFile.timestamp).order_by(Cluster.start).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-
-    filters = {'label': selected_label}
-    return render_template('clusters/cluster_view.html', title='Selections in sound cluster', clusters=clusters, filter_form=filter_form, filters=filters)
+    q = Cluster.query.filter(Cluster.cg_id == group_id).filter(Cluster.cluster_name == cluster_name)
+    if filter_form.validate():
+        if filter_form.select_label.data:
+            q = q.filter(Cluster.label == filter_form.select_label.data.label)
+    clusters = q.join(AudioFile).order_by(AudioFile.timestamp).order_by(Cluster.start).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
+    return render_template('clusters/cluster_view.html', title='Selections in sound cluster', clusters=clusters, filter_form=filter_form)
 
 
 @bp.route('/clusters/upload', methods=['GET', 'POST'])

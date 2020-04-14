@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block app_content %}
-    {{ render_form(filter_form, form_type='horizontal') }}
+    {{ render_form(filter_form, method='get', form_type='horizontal') }}
 
     {% for cluster in clusters.items %}
         <div class="card mt-3 mb-3">
@@ -34,7 +34,7 @@
         </div>
     {% endfor %}
 
-    {{ render_pagination(clusters, args=filters) }}
+    {{ render_pagination(clusters) }}
 {% endblock %}
 
 {% block scripts %}

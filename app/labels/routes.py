@@ -5,54 +5,42 @@ from app import db
 from app.models import User, AudioFile, Label, LabelType, LabeledClip, Equipment, MonitoringStation, Project, ProjectLabel
 from app.user.roles import admin_permission
 from app.labels import bp
-from app.labels.forms import FilterLabelsForm, EditLabelForm, DeleteLabelForm
+from app.labels.forms import FilterForm, EditForm, DeleteForm
 from datetime import datetime
 
 
-@bp.route('/labels', methods=['GET', 'POST'])
-@bp.route('/labels/project/<project_id>', methods=['GET', 'POST'])
+@bp.route('/labels')
+@bp.route('/labels/project/<project_id>')
 @login_required
 @admin_permission.require(http_exception=403)
 def list_labels(project_id=None):
     page = request.args.get('page', 1, type=int)
-    filter_form = FilterLabelsForm()
+    filter_form = FilterForm(request.args)
     fq = Label.query
-    q = LabeledClip.query.join(AudioFile).join(Label)
-
+    q = LabeledClip.query.join(AudioFile)
     if project_id:
-        q = q.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).join(Project).filter(Project.id == project_id)
-        fq = fq.join(ProjectLabel, Label.id == ProjectLabel.label_id).join(Project).filter(Project.id == project_id)
-
+        q = q.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == project_id)
+        fq = fq.join(ProjectLabel, Label.id == ProjectLabel.label_id).filter(ProjectLabel.project_id == project_id)
     filter_form.select_label.query = fq
-
-    if request.method == 'POST':
-        selected_label = filter_form.select_label.data.id if filter_form.select_label.data else None
-    else:
-        selected_label = request.args.get('label', type=int)
-
-    if selected_label:
-        q = q.filter(Label.id == selected_label)
-        print(q)
-    
+    if filter_form.validate():
+        if filter_form.select_label.data:
+            q = q.join(Label).filter(Label.id == filter_form.select_label.data.id)
     clips = q.order_by(AudioFile.timestamp).order_by(LabeledClip.offset).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-
-    filters = {'label': selected_label}
-    return render_template('labels/label_list.html', title='Labels', clips=clips, filter_form=filter_form, filters=filters)
+    return render_template('labels/label_list.html', title='Labels', clips=clips, filter_form=filter_form)
 
 
 @bp.route('/clip/<file_name>/<offset>', methods=['GET', 'POST'])
 @login_required
 @admin_permission.require(http_exception=403)
 def view_clip(file_name, offset):
-    delete_form = DeleteLabelForm()
-    form = EditLabelForm()
+    delete_form = DeleteForm()
+    form = EditForm()
     form.select_label.query = Label.query
     if form.validate_on_submit():
         label = LabeledClip(file_name=file_name, offset=offset, label=form.select_label.data, notes=form.notes.data, user=current_user, modified=datetime.utcnow())
         db.session.add(label)
         db.session.commit()
         return redirect(url_for('labels.view_clip', file_name=file_name, offset=offset))
-
     labels = LabeledClip.query.filter_by(file_name=file_name, offset=offset).order_by(LabeledClip.modified.desc()).all()
     return render_template('labels/view_clip.html',  title='Add/edit labels', delete_form=delete_form, form=form, labels=labels, file_name=file_name, offset=offset)
 

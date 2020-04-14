@@ -20,7 +20,7 @@
         </div>
 
         <div class="col-6 mh-100 overflow-auto">
-            {{ render_form(filter_form, form_type='horizontal') }}
+            {{ render_form(filter_form, method='get', form_type='horizontal') }}
 
             {% for file in files.items %}
                 <div class="card mt-3 mb-3">
@@ -32,7 +32,7 @@
                 </div>
             {% endfor %}
 
-            {{ render_pagination(files, args=filters) }}
+            {{ render_pagination(files) }}
         </div>
 
     </div>
