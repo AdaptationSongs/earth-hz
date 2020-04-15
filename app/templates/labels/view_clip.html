@@ -9,9 +9,27 @@
 {% endblock %}
 
 {% block app_content %}
-    <a class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ file_name }}', '{{ offset }}')">Play clip</a>
-    <img class="img-fluid" src="{{ url_for('audio.spectro', file_name=file_name, offset=offset) }}">
-
+    <div class="row">
+        <div class="col-md-7">
+            <a id="play" class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ wav_file.name }}', '{{ offset }}')">Play clip &#9658;</a>
+            <img class="img-fluid" src="{{ url_for('audio.spectro', file_name=wav_file.name, offset=offset) }}">
+        </div>
+        <div class="col-md-5">
+            <p>Date: {{ wav_file.timestamp.strftime('%Y-%m-%d') }}</p>
+            <p>Time: {{ wav_file.timestamp.strftime('%H:%M:%S') }}</p>
+            <p>Offset: +{{ offset }} sec</p>
+            <p>Monitoring station: {{ station.name }}</p>
+            <p><a class="btn btn-secondary" href="javascript:void(0)" onclick="loadFullAudio('{{ wav_file.name }}', '{{ offset }}', '{{ config.CLIP_SECS }}')">Load full recording</a></p>
+            <ul class="pagination">
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('labels.view_clip', file_name=wav_file.name, offset=offset-config.CLIP_SECS) }}">&laquo; Prev {{ config.CLIP_SECS }} sec</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('labels.view_clip', file_name=wav_file.name, offset=offset+config.CLIP_SECS) }}">Next {{ config.CLIP_SECS }} sec &raquo;</a>
+                </li>
+            </ul>
+        </div>
+    </div>
     <div class="card mt-3 mb-3">
          <div class="card-body">
              <h3 class="card-title">Label</h3>
@@ -28,7 +46,7 @@
                 {% if label.notes %} <p class="card-text">Notes: {{ label.notes }}</p> {% endif %}
                 {% if label.user == current_user %}
                     <div class="float-right">
-                        {{ render_form(delete_form, action=url_for('labels.delete_clip_label', file_name=file_name, offset=offset, label_id=label.id), button_map={'delete_button': 'danger'}) }}
+                        {{ render_form(delete_form, action=url_for('labels.delete_clip_label', file_name=wav_file.name, offset=offset, label_id=label.id), button_map={'delete_button': 'danger'}) }}
                     </div>
                 {% endif %}
             </div>
@@ -40,5 +58,17 @@
 {% block scripts %}
     {{ super() }}
     <script type="text/javascript" src="/static/audio-functions.js"></script>
+    <script type="text/javascript">
+        function loadFullAudio(wav_file, offset, duration) {
+            var audio = $('audio').get(0);
+            $('audio').attr('src', '/stream_file/'+wav_file+'.mp3');
+            audio.load();
+            $("#play").attr("onclick", "playSelection("+offset+", "+duration+")");
+        }
+
+        $( document ).ready(function() {
+            playClip('{{ wav_file.name }}', '{{ offset }}');
+        }); 
+    </script>
 {% endblock %}
 

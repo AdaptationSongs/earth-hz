@@ -29,7 +29,7 @@ def list_labels(project_id=None):
     return render_template('labels/label_list.html', title='Labels', clips=clips, filter_form=filter_form)
 
 
-@bp.route('/clip/<file_name>/<offset>', methods=['GET', 'POST'])
+@bp.route('/clip/<file_name>/<float:offset>', methods=['GET', 'POST'])
 @login_required
 @admin_permission.require(http_exception=403)
 def view_clip(file_name, offset):
@@ -41,8 +41,10 @@ def view_clip(file_name, offset):
         db.session.add(label)
         db.session.commit()
         return redirect(url_for('labels.view_clip', file_name=file_name, offset=offset))
+    wav_file = AudioFile.query.filter_by(name=file_name).first()
+    station = MonitoringStation.query.join(Equipment).filter(Equipment.serial_number == wav_file.sn).first()
     labels = LabeledClip.query.filter_by(file_name=file_name, offset=offset).order_by(LabeledClip.modified.desc()).all()
-    return render_template('labels/view_clip.html',  title='Add/edit labels', delete_form=delete_form, form=form, labels=labels, file_name=file_name, offset=offset)
+    return render_template('labels/view_clip.html',  title='Add/edit labels', delete_form=delete_form, form=form, labels=labels, wav_file=wav_file, offset=offset, station=station)
 
 
 @bp.route('/clip/<file_name>/<offset>/delete/<label_id>', methods=['POST'])

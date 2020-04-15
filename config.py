@@ -11,7 +11,7 @@ class Config(object):
     DEBUG = int(os.environ.get('DEBUG') or False)
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') or 'sqlite:///'+os.path.join(basedir, 'app.db')
     ITEMS_PER_PAGE = int(os.environ.get('ITEMS_PER_PAGE') or 20)
-    CLIP_SECS = int(os.environ.get('CLIP_SECS') or 5)
+    CLIP_SECS = float(os.environ.get('CLIP_SECS') or 5)
 
     # Google OAuth
     GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID')
