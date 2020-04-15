@@ -19,7 +19,7 @@
             <p>Time: {{ wav_file.timestamp.strftime('%H:%M:%S') }}</p>
             <p>Offset: +{{ offset }} sec</p>
             <p>Monitoring station: {{ station.name }}</p>
-            <p><a class="btn btn-secondary" href="javascript:void(0)" onclick="loadFullAudio('{{ wav_file.name }}', '{{ offset }}', '{{ config.CLIP_SECS }}')">Load full recording</a></p>
+            <p><a id="load" class="btn btn-secondary" href="javascript:void(0)" onclick="loadFullAudio('{{ wav_file.name }}', '{{ offset }}', '{{ config.CLIP_SECS }}')">Load full recording</a></p>
             <ul class="pagination">
                 <li class="page-item">
                     <a class="page-link" href="{{ url_for('labels.view_clip', file_name=wav_file.name, offset=offset-config.CLIP_SECS) }}">&laquo; Prev {{ config.CLIP_SECS }} sec</a>
@@ -60,14 +60,20 @@
     <script type="text/javascript" src="/static/audio-functions.js"></script>
     <script type="text/javascript">
         function loadFullAudio(wav_file, offset, duration) {
-            var audio = $('audio').get(0);
-            $('audio').attr('src', '/stream_file/'+wav_file+'.mp3');
+            var audio = $("audio").get(0);
+            $("audio").attr("src", "/stream_file/"+wav_file+".mp3");
+            $("#load").addClass("disabled");
+            $("#load").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...');
             audio.load();
+            audio.addEventListener('canplay', function() {
+                $("#load").html("Full recording loaded");
+            }, false);
             $("#play").attr("onclick", "playSelection("+offset+", "+duration+")");
+            playSelection(offset, duration);
         }
 
         $( document ).ready(function() {
-            playClip('{{ wav_file.name }}', '{{ offset }}');
+            playClip("{{ wav_file.name }}", "{{ offset }}");
         }); 
     </script>
 {% endblock %}
