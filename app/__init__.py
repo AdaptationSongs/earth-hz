@@ -4,6 +4,7 @@ from flask_behind_proxy import FlaskBehindProxy
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from flask_session import Session
 from flask_bootstrap import Bootstrap
 from flask_admin import Admin
 from flask_principal import Principal, identity_loaded
@@ -15,6 +16,7 @@ login = LoginManager()
 login.login_view = 'user_views.login'
 login.login_message = 'Please log in to access this page.'
 login.session_protection = "strong"
+sess = Session()
 bootstrap = Bootstrap()
 admin = Admin()
 principal = Principal() 
@@ -29,6 +31,7 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
+    sess.init_app(app)
     bootstrap.init_app(app)
     admin.init_app(app)
     principal.init_app(app)
