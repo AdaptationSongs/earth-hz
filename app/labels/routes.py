@@ -42,9 +42,10 @@ def view_clip(file_name, offset):
     form.select_label.query = lq.filter(LabelType.parent_id == None)
     form.select_sub_label.query = lq.filter(LabelType.parent_id != None)
     if form.validate_on_submit():
-        label = LabeledClip(file_name=file_name, offset=offset, label=form.select_label.data, notes=form.notes.data, user=current_user, modified=datetime.utcnow())
+        label = LabeledClip(file_name=file_name, offset=offset, label=form.select_label.data, sub_label=form.select_sub_label.data, notes=form.notes.data, user=current_user, modified=datetime.utcnow())
         db.session.add(label)
         db.session.commit()
+        flash('Label added.')
         return redirect(url_for('labels.view_clip', file_name=file_name, offset=offset))
     labels = LabeledClip.query.filter_by(file_name=file_name, offset=offset).order_by(LabeledClip.modified.desc()).all()
     return render_template('labels/view_clip.html',  title='Add/edit labels', delete_form=delete_form, form=form, labels=labels, wav_file=wav_file, offset=offset, station=station)
@@ -64,10 +65,11 @@ def delete_clip_label(file_name, offset, label_id):
 @bp.route('/_get_labels/<project_id>')
 def _get_labels(project_id):
     type_id = request.args.get('type', type=int)
-    label_query = ProjectLabel.query.filter_by(project_id=project_id).join(Label).join(LabelType).filter(LabelType.id == type_id)
-    labels = [{'id':row.id, 'label':row.label.name} for row in label_query.all()]
-    sub_query = ProjectLabel.query.filter_by(project_id=project_id).join(Label).join(LabelType).filter(LabelType.parent_id == type_id)
-    sub_labels = [{'id':row.id, 'label':row.label.name} for row in sub_query.all()]
-    sub_type = sub_query.first().label.type.name if sub_labels else None
+    q = Label.query.join(LabelType).join(ProjectLabel, Label.id == ProjectLabel.label_id).filter(ProjectLabel.project_id == project_id)
+    label_query = q.filter(LabelType.id == type_id)
+    labels = [{'id':row.id, 'label':row.name} for row in label_query.all()]
+    sub_query = q.filter(LabelType.parent_id == type_id)
+    sub_labels = [{'id':row.id, 'label':row.name} for row in sub_query.all()]
+    sub_type = sub_query.first().type.name if sub_labels else None
     label_json = {'labels':labels, 'sub':{'type':sub_type, 'labels':sub_labels}}
     return jsonify(label_json)
