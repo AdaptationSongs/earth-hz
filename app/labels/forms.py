@@ -10,7 +10,9 @@ class FilterForm(FlaskForm):
 
 
 class EditForm(FlaskForm):
+    select_type = QuerySelectField('Type:', validators=[InputRequired()])
     select_label = QuerySelectField('Label:', validators=[InputRequired()])
+    select_sub_label = QuerySelectField('Sub-label:', validators=[Optional()], allow_blank=True)
     notes = TextAreaField()
     submit_button = SubmitField('Save')
 

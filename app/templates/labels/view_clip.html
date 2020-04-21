@@ -43,7 +43,7 @@
             <div class="card-body">
                 <h5 class="card-title">{{ label.label.name }}</h5>
                 <p class="card-text">submitted by {{ label.user }} on {{ label.modified }}</p>
-                {% if label.notes %} <p class="card-text">Notes: {{ label.notes }}</p> {% endif %}
+                {% if label.ndotes %} <p class="card-text">Notes: {{ label.notes }}</p> {% endif %}
                 {% if label.user == current_user %}
                     <div class="float-right">
                         {{ render_form(delete_form, action=url_for('labels.delete_clip_label', file_name=wav_file.name, offset=offset, label_id=label.id), button_map={'delete_button': 'danger'}) }}
@@ -72,7 +72,56 @@
             playSelection(offset, duration);
         }
 
+        var dropdown = {
+            type: $("#select_type"),
+            label: $("#select_label"),
+            sub_label: $("#select_sub_label")
+        };
+
+        function updateLabels() {
+            var send = {
+                type: dropdown.type.val()
+            };
+            dropdown.label.attr('disabled', 'disabled');
+            dropdown.label.empty();
+            dropdown.sub_label.attr('disabled', 'disabled');
+            dropdown.sub_label.empty();
+            $.getJSON("{{ url_for('labels._get_labels', project_id=station.project_id) }}", send, function(data) {
+                data.labels.forEach(function(item) {
+                    dropdown.label.append(
+                        $('<option>', {
+                            value: item.id,
+                            text: item.label
+                        })
+                    );
+                });
+                dropdown.label.removeAttr('disabled');
+                if (data.sub.type) {
+                    dropdown.sub_label.append(
+                        $('<option>', {
+                            value: '__None',
+                            text: 'Select ' + data.sub.type
+                        })
+                    );
+                    data.sub.labels.forEach(function(item) {
+                        dropdown.sub_label.append(
+                            $('<option>', {
+                                value: item.id,
+                                text: item.label
+                            })
+                        );
+                    });
+                    dropdown.sub_label.removeAttr('disabled');
+                }
+            });
+        }
+
+        dropdown.type.on('change', function() {
+            updateLabels();
+        });
+
         $( document ).ready(function() {
+            updateLabels();
             playClip("{{ wav_file.name }}", "{{ offset }}");
         }); 
     </script>

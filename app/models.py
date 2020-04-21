@@ -139,6 +139,8 @@ class Cluster(db.Model):
 class LabelType(db.Model):
     __tablename__ = 'label_types'
     id = db.Column(db.Integer, primary_key=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey('label_types.id'))
+    parent_type = db.relationship('LabelType', remote_side=[id])
     name = db.Column(db.String(255), unique=True, nullable=False)
 
     def __repr__(self):
