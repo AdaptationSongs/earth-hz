@@ -16,7 +16,7 @@ from datetime import datetime
 def list_labels(project_id=None):
     page = request.args.get('page', 1, type=int)
     filter_form = FilterForm(request.args)
-    fq = Label.query
+    fq = Label.query.join(LabelType).filter(LabelType.parent_id == None)
     q = LabeledClip.query.join(AudioFile)
     if project_id:
         q = q.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == project_id)
@@ -24,7 +24,7 @@ def list_labels(project_id=None):
     filter_form.select_label.query = fq
     if filter_form.validate():
         if filter_form.select_label.data:
-            q = q.join(Label).filter(Label.id == filter_form.select_label.data.id)
+            q = q.join(LabeledClip.label).filter(Label.id == filter_form.select_label.data.id)
     clips = q.order_by(AudioFile.timestamp).order_by(LabeledClip.offset).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
     return render_template('labels/label_list.html', title='Labels', clips=clips, filter_form=filter_form)
 
