@@ -195,6 +195,7 @@ class LabeledClip(db.Model):
     sub_label = db.relationship('Label', foreign_keys=[sub_label_id])
     user_id = db.Column(db.Integer, db.ForeignKey(User.id))
     user = db.relationship('User')
+    certain = db.Column(db.Boolean, default=True)
     notes = db.Column(db.String(255), nullable=True)
     modified = db.Column(db.DateTime, default=datetime.utcnow())
 

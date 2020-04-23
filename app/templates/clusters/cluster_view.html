@@ -22,7 +22,7 @@
                     <p class="card-text">Manual ID: {{ cluster.label }}</p>
                     <p class="card-text">Labels: <ul>
                         {% for clip in cluster.labeled_clips() %}
-                            <li>{{ clip.label.name }}</li>
+                            <li>{{ clip.label.name }}{% if not clip.label.certain %} (maybe){% endif %}</li>
                         {% endfor %}
                     </ul></p>
                     <a class="btn btn-primary" href="{{ url_for('labels.view_clip', file_name=cluster.file.name, offset=cluster.nearest_window()) }}">Label</a>

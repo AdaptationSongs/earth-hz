@@ -42,7 +42,7 @@ def view_clip(file_name, offset):
     form.select_label.query = lq.filter(LabelType.parent_id == None)
     form.select_sub_label.query = lq.filter(LabelType.parent_id != None)
     if form.validate_on_submit():
-        label = LabeledClip(file_name=file_name, offset=offset, label=form.select_label.data, sub_label=form.select_sub_label.data, notes=form.notes.data, user=current_user, modified=datetime.utcnow())
+        label = LabeledClip(file_name=file_name, offset=offset, certain=form.certainty.data, label=form.select_label.data, sub_label=form.select_sub_label.data, notes=form.notes.data, user=current_user, modified=datetime.utcnow())
         db.session.add(label)
         db.session.commit()
         flash('Label added.')

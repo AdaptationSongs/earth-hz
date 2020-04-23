@@ -10,6 +10,7 @@ class FilterForm(FlaskForm):
 
 
 class EditForm(FlaskForm):
+    certainty = SelectField('Certainty:', choices=[(False, 'maybe'), (True, 'definitely')], default=True, validators=[InputRequired()], coerce=lambda x: x == 'True')
     select_type = QuerySelectField('Type:', validators=[InputRequired()])
     select_label = QuerySelectField('Label:', validators=[InputRequired()])
     select_sub_label = QuerySelectField('Sub-label:', validators=[Optional()], allow_blank=True)

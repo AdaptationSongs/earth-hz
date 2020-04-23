@@ -32,8 +32,8 @@
     </div>
     <div class="card mt-3 mb-3">
          <div class="card-body">
-             <h3 class="card-title">Label</h3>
-             {{ render_form(form) }}
+             <h3 class="card-title">Add Label</h3>
+             {{ render_form(form, form_type='horizontal') }}
          </div>
     </div>
 
@@ -41,7 +41,7 @@
     {% for label in labels %}
         <div class="card mt-3 mb-3">
             <div class="card-body">
-                <h5 class="card-title">{{ label.label.name }}</h5>
+                <h5 class="card-title">{{ label.label.name }}{% if not label.certain %} (maybe){% endif %}</h5>
                 {% if label.sub_label %} <h6 class="card-title">{{ label.sub_label.type.name }}: {{ label.sub_label.name }}</h5> {% endif %}
                 <p class="card-text">submitted by {{ label.user }} on {{ label.modified }}</p>
                 {% if label.notes %} <p class="card-text">Notes: {{ label.notes }}</p> {% endif %}

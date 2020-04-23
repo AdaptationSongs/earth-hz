@@ -17,7 +17,7 @@
             <div class="card-body row">
                 <div class="col-md-6">
                     <a class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ clip.file.name }}', '{{ clip.offset }}')">Play clip</a>
-                    <h5 class="card-title">{{ clip.label.name }}</h5>
+                    <h5 class="card-title">{{ clip.label.name }}{% if not clip.certain %} (maybe){% endif %}</h5>
                     <p class="card-text">Start time: {{ clip.start_time() }}</p>
                     <p class="card-text">Recording device: {{ clip.file.sn }}</p>
                     <p class="card-text">submitted by {{ clip.user }} on {{ clip.modified }}</p>
