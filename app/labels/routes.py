@@ -7,6 +7,8 @@ from app.user.roles import admin_permission
 from app.labels import bp
 from app.labels.forms import FilterForm, EditForm, DeleteForm
 from datetime import datetime
+from sqlalchemy.orm import aliased
+import flask_excel as excel
 
 
 @bp.route('/labels')
@@ -26,7 +28,17 @@ def list_labels(project_id=None):
         if filter_form.select_label.data:
             q = q.join(LabeledClip.label).filter(Label.id == filter_form.select_label.data.id)
     clips = q.order_by(AudioFile.timestamp).order_by(LabeledClip.offset).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-    return render_template('labels/label_list.html', title='Labels', clips=clips, filter_form=filter_form)
+    return render_template('labels/label_list.html', title='Labels', clips=clips, project_id=project_id, filter_form=filter_form)
+
+
+@bp.route('/labels/project/<project_id>/download-labels.csv')
+@login_required
+@admin_permission.require(http_exception=403)
+def export_csv(project_id):
+    sub = aliased(Label)
+    q = LabeledClip.query.join(LabeledClip.label).join(sub, LabeledClip.sub_label, isouter=True).join(User).join(AudioFile).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == project_id).with_entities(AudioFile.path, LabeledClip.file_name, LabeledClip.offset, Label.name.label('label'), sub.name.label('sub_label'), LabeledClip.certain, LabeledClip.notes, LabeledClip.modified, User.name.label('user')).all()
+    column_names = ['path', 'file_name', 'offset', 'label', 'sub_label', 'certain', 'notes', 'modified', 'user']
+    return excel.make_response_from_query_sets(q, column_names, 'csv')
 
 
 @bp.route('/clip/<file_name>/<float:offset>', methods=['GET', 'POST'])

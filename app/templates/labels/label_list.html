@@ -31,6 +31,8 @@
     {% endfor %}
 
     {{ render_pagination(clips) }}
+    <h4>Export data:</h4>
+    <p><a class="btn btn-primary" href="{{ url_for('labels.export_csv', project_id=project_id) }}">Download as CSV</a></p>
 {% endblock %}
 
 {% block scripts %}

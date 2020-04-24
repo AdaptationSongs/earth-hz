@@ -8,6 +8,7 @@ from flask_session import Session
 from flask_bootstrap import Bootstrap
 from flask_admin import Admin
 from flask_principal import Principal, identity_loaded
+import flask_excel as excel
 from config import Config
 
 db = SQLAlchemy()
@@ -35,6 +36,7 @@ def create_app(config_class=Config):
     bootstrap.init_app(app)
     admin.init_app(app)
     principal.init_app(app)
+    excel.init_excel(app)
 
     # connect listener for identity loaded signal
     from app.user.roles import on_identity_loaded

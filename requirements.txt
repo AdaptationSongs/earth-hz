@@ -16,6 +16,7 @@ Flask==1.1.1
 Flask-Admin==1.5.5
 flask-behind-proxy==0.1.1
 Flask-Dance==3.0.0
+Flask-Excel==0.0.7
 Flask-Login==0.5.0
 Flask-Migrate==2.5.2
 Flask-Principal==0.4.0
@@ -30,6 +31,7 @@ joblib==0.14.1
 kiwisolver==1.1.0
 librosa==0.7.2
 llvmlite==0.31.0
+lml==0.0.9
 Mako==1.1.2
 MarkupSafe==1.1.1
 matplotlib==3.0.3
@@ -40,6 +42,9 @@ pandas==0.25.3
 psycopg2==2.8.4
 pycparser==2.19
 pydub==0.23.1
+pyexcel==0.5.15
+pyexcel-io==0.5.20
+pyexcel-webio==0.1.4
 PyJWT==1.7.1
 pyparsing==2.4.6
 python-dateutil==2.8.1
@@ -56,6 +61,7 @@ six==1.14.0
 SoundFile==0.10.3.post1
 SQLAlchemy==1.3.13
 SQLAlchemy-Utils==0.36.3
+texttable==1.6.2
 urllib3==1.25.8
 URLObject==2.4.3
 visitor==0.1.3
