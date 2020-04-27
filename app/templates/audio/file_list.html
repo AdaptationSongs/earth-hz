@@ -42,5 +42,38 @@
 {% block scripts %}
     {{super()}}
     <script type="text/javascript" src="/static/audio-functions.js"></script>
+    <script type="text/javascript">
+        var dropdown = {
+            station: $("#select_station"),
+        };
+        var datepicker = {
+            after: $("#after"),
+            before: $("#before"),
+        };
+
+        function updateAllowedDates() {
+            var send = {
+                station: dropdown.station.val()
+            };
+            $.getJSON("{{ url_for('audio._get_date_range', project_id=project_id) }}", send, function(data) {
+                datepicker.after.attr('min', data.first);
+                datepicker.after.attr('max', data.last);
+                datepicker.after.val(data.first);
+                datepicker.before.attr('min', data.first);
+                datepicker.before.attr('max', data.last);
+                datepicker.before.val(data.last);
+            });
+        }
+
+        dropdown.station.on('change', function() {
+            updateAllowedDates();
+        });
+
+        $( document ).ready(function() {
+            if (datepicker.after.val() == "" && datepicker.before.val() == "") {
+                updateAllowedDates();
+            }
+        });
+    </script>
 {% endblock %}
 

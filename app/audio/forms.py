@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import Form, SelectField, SubmitField
 from wtforms.fields.html5 import DateField
-from wtforms.validators import InputRequired, Optional
+from wtforms.validators import InputRequired, Optional, ValidationError
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 
 
@@ -20,4 +20,11 @@ class FilterForm(FlaskForm):
     until_hour = SelectField('Until:', choices=hours_list(), validators=[Optional()], coerce=int)
     submit_button = SubmitField('Filter results')
 
+    def validate_after(form, field):
+        if field.data and form.before.data and (field.data > form.before.data):
+            raise ValidationError('After and before dates reversed.')
+
+    def validate_before(form, field):
+        if field.data and form.after.data and (field.data == form.after.data):
+            raise ValidationError('After and before cannot be the same day.')
 

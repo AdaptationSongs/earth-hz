@@ -1,5 +1,7 @@
 import os
 from flask import Flask, request, current_app
+from flask.json import JSONEncoder
+from datetime import date
 from flask_behind_proxy import FlaskBehindProxy
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -21,6 +23,13 @@ sess = Session()
 bootstrap = Bootstrap()
 admin = Admin()
 principal = Principal() 
+
+
+class CustomJSONEncoder(JSONEncoder):
+    def default(self, o):
+        if isinstance(o, date):
+            return o.isoformat()
+        return super().default(o)
 
 
 def create_app(config_class=Config):
@@ -69,6 +78,9 @@ def create_app(config_class=Config):
 
     from app.ml import bp as ml_bp
     app.register_blueprint(ml_bp, url_prefix='/ml')
+
+    # custom overrides
+    app.json_encoder = CustomJSONEncoder
 
     return app
 

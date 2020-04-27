@@ -151,6 +151,7 @@ def list_files(project_id=None):
         fq = fq.filter(MonitoringStation.project_id == project_id)
     else:
         fq = fq.all()
+        project_id = None
     filter_form.select_station.query = fq
     if filter_form.validate():
         if filter_form.select_station.data:
@@ -164,6 +165,22 @@ def list_files(project_id=None):
         if filter_form.until_hour.data:
             q = q.filter(extract('hour', AudioFile.timestamp) < filter_form.until_hour.data) 
     files = q.order_by(AudioFile.timestamp).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-    return render_template('audio/file_list.html', title='Browse all wav files', files=files, filter_form=filter_form)
+    return render_template('audio/file_list.html', title='Browse all wav files', project_id=project_id, files=files, filter_form=filter_form)
 
+
+@bp.route('/audio/_get_date_range')
+@bp.route('/audio/_get_date_range/<project_id>')
+def _get_date_range(project_id=None):
+    station_id = request.args.get('station', type=int)
+    q = AudioFile.query.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation)
+    if project_id:
+        q = q.filter(MonitoringStation.project_id == project_id)
+    if station_id:
+        q = q.filter(MonitoringStation.id == station_id)
+    first_file = q.order_by(AudioFile.timestamp.asc()).first()
+    first_date = datetime.date(first_file.timestamp) if first_file else None
+    last_file = q.order_by(AudioFile.timestamp.desc()).first()
+    last_date = datetime.date(last_file.timestamp) if last_file else None
+    date_range = {'first': first_date, 'last': last_date}
+    return jsonify(date_range)
 
