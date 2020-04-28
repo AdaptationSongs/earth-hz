@@ -1,13 +1,6 @@
-{% extends "base.html" %}
+{% extends 'audio-player.html' %}
 {% from 'bootstrap/form.html' import render_form %}
 {% from 'bootstrap/pagination.html' import render_pagination %}
-
-{% block navbar %}
-    {{ super() }}
-    <audio controls="controls" class="w-100 bg-light">
-        Please upgrade your browser.
-    </audio>
-{% endblock %}
 
 {% block app_content %}
     <a href="{{ url_for('ml.upload_single_label', project_id=project_id) }}" class="btn btn-primary">Upload single label</a>
@@ -38,9 +31,4 @@
     {% endfor %}
 
     {{ render_pagination(predictions) }}
-{% endblock %}
-
-{% block scripts %}
-    {{ super() }}
-    <script type="text/javascript" src="/static/audio-functions.js"></script>
 {% endblock %}

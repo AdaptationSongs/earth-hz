@@ -1,12 +1,5 @@
-{% extends "base.html" %}
+{% extends 'audio-player.html' %}
 {% from 'bootstrap/form.html' import render_form %}
-
-{% block navbar %}
-    {{ super() }}
-    <audio controls="controls" class="w-100 bg-light">
-        Please upgrade your browser.
-    </audio>
-{% endblock %}
 
 {% block app_content %}
     <div class="row">
@@ -58,7 +51,6 @@
 
 {% block scripts %}
     {{ super() }}
-    <script type="text/javascript" src="/static/audio-functions.js"></script>
     <script type="text/javascript">
         function loadFullAudio(wav_file, offset, duration) {
             var audio = $("audio").get(0);

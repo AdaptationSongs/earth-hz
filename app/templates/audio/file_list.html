@@ -1,13 +1,6 @@
-{% extends "base.html" %}
+{% extends 'audio-player.html' %}
 {% from 'bootstrap/form.html' import render_form %}
 {% from 'bootstrap/pagination.html' import render_pagination %}
-
-{% block navbar %}
-    {{ super() }}
-    <audio controls="controls" class="w-100">
-        Please upgrade your browser.
-    </audio>
-{% endblock %}
 
 {% block app_content %}
     <div class="row h-100">
@@ -41,8 +34,9 @@
 
 {% block scripts %}
     {{super()}}
-    <script type="text/javascript" src="/static/audio-functions.js"></script>
     <script type="text/javascript">
+        // Global variables
+        var current_offset = 0.0;
         var dropdown = {
             station: $("#select_station"),
         };
@@ -50,6 +44,33 @@
             after: $("#after"),
             before: $("#before"),
         };
+
+
+        function playStream(wav_file) {
+            var audio = $('audio').get(0);
+            $(audio).attr('src', '/stream_file/'+wav_file+'.mp3');
+            $('#current-file').text(wav_file);
+            $('#replay-btn').removeClass('disabled');
+            $('#label-btn').removeClass('disabled').attr('href', '/clip/'+wav_file+'/0.0');
+            $('#spec-img').removeClass('d-none').attr('src', '/spectrogram/'+wav_file+'-0.0.png');
+            audio.load();
+            audio.play();
+            $(audio).off('timeupdate.full');
+            $(audio).on('timeupdate.full', function() {
+                var new_offset = Math.floor(audio.currentTime / {{ config.CLIP_SECS }}) * {{ config.CLIP_SECS }};
+                if (new_offset != current_offset) {
+                    current_offset = new_offset;
+                    offset_string = (current_offset % 1 == 0) ? current_offset + ".0" : current_offset.toString();
+                    $('#current-offset').text('+'+offset_string+' sec');
+                    $('#replay-btn').click(function() {
+                        playSelection(current_offset, 5);
+                    });
+                    $('#label-btn').attr('href', '/clip/'+wav_file+'/'+offset_string);
+                    $('#spec-img').attr('src', '/spectrogram/'+wav_file+'-'+offset_string+'.png');
+                }
+            });
+        }
+
 
         function updateAllowedDates() {
             var send = {
@@ -64,6 +85,7 @@
                 datepicker.before.val(data.last);
             });
         }
+
 
         dropdown.station.on('change', function() {
             updateAllowedDates();
