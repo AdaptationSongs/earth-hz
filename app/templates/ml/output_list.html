@@ -18,7 +18,7 @@
                     <p class="card-text">Probability: {{ prediction.probability }}</p>
                     <p class="card-text">Manual labels: <ul>
                         {% for clip in prediction.labeled_clips() %}
-                            <li>{{ clip.label.name }}{% if not clip.label.certain %} (maybe){% endif %}</li>
+                            <li>{{ clip.label.name }}{% if not clip.certain %} (maybe){% endif %}</li>
                         {% endfor %}
                     </ul></p>
                     <a class="btn btn-primary" href="{{ url_for('labels.view_clip', file_name=prediction.file.name, offset=prediction.offset) }}">Label</a>
