@@ -3,7 +3,7 @@
 {% from 'bootstrap/pagination.html' import render_pagination %}
 
 {% block app_content %}
-    <a href="{{ url_for('clusters.upload') }}" class="btn btn-primary">Upload new clusters</a>
+    <a href="{{ url_for('clusters.upload', project_id=project_id) }}" class="btn btn-primary">Upload new clusters</a>
 
     {% for group in groups.items %}
         <div class="card mt-3 mb-3">

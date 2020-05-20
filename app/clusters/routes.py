@@ -22,7 +22,7 @@ def cluster_groups(project_id=None):
         q = q.join(Project).filter(Project.id == project_id)
     groups = q.order_by(ClusterGroup.name).paginate(
             page, current_app.config['ITEMS_PER_PAGE'], False)
-    return render_template('clusters/cluster_groups.html', title='All cluster groups', groups=groups, delete_form=delete_form)
+    return render_template('clusters/cluster_groups.html', title='All cluster groups', groups=groups, project_id=project_id, delete_form=delete_form)
 
 
 @bp.route('/clusters/<group_id>')
@@ -55,23 +55,24 @@ def view_cluster(group_id, cluster_name):
     return render_template('clusters/cluster_view.html', title='Selections in sound cluster', clusters=clusters, filter_form=filter_form)
 
 
-@bp.route('/clusters/upload', methods=['GET', 'POST'])
+@bp.route('/clusters/project/<project_id>/upload', methods=['GET', 'POST'])
 @login_required
 @admin_permission.require(http_exception=403)
-def upload():
+def upload(project_id):
+    current_project = Project.query.get(project_id)
     form = UploadForm()
     if form.validate_on_submit():
         f = form.upload.data
         cluster_df = pd.read_csv(f)
         cluster_df.columns = cluster_df.columns.str.replace('*', '')
         import_df = cluster_df[['IN FILE', 'OFFSET', 'DURATION', 'TOP1MATCH', 'MANUAL ID']]
-        cg = ClusterGroup(name=form.cluster_name.data, user=current_user)
+        cg = ClusterGroup(name=form.cluster_name.data, user=current_user, project=current_project)
         db.session.add(cg)
         db.session.commit()
         import_df['cg_id'] = cg.id
         import_df.to_sql('clusters', con=db.engine, index=False, if_exists='append')
-        return redirect(url_for('clusters.cluster_groups'))
-    return render_template('clusters/upload.html', title="Upload cluster file", form=form)
+        return redirect(url_for('clusters.cluster_groups', project_id=project_id))
+    return render_template('clusters/upload.html', title="Upload cluster file", form=form, project_id=project_id)
 
 
 @bp.route('/clusters/<group_id>/delete', methods=['POST'])
@@ -83,4 +84,4 @@ def delete_clusters(group_id):
         db.session.delete(group)
         db.session.commit()
         flash('Cluster group deleted.')
-    return redirect(url_for('clusters.cluster_groups'))
+    return redirect(url_for('clusters.cluster_groups', project_id=group.project_id))
