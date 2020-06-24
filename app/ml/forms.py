@@ -1,16 +1,14 @@
 from flask_wtf import FlaskForm
-from wtforms import Form, SelectField, SubmitField, StringField
-from wtforms.validators import InputRequired, Optional
+from wtforms import Form, SelectField, SubmitField, StringField, FloatField
+from wtforms.validators import InputRequired, Optional, NumberRange
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 
 
-def manual_id(row):
-    return row.label
-
 
 class FilterForm(FlaskForm):
-    select_label = QuerySelectField('Label:', validators=[Optional()], allow_blank=True, blank_text='(All)')
+    predicted_label = QuerySelectField('Predicted label:', validators=[Optional()], allow_blank=True, blank_text='(All)')
+    threshold = FloatField('Threshold:', validators=[Optional(), NumberRange(min=0, max=1)])
     submit_button = SubmitField('Filter results')
 
 

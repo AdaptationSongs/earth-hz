@@ -15,11 +15,15 @@ import pandas as pd
 def list_outputs(project_id):
     page = request.args.get('page', 1, type=int)
     filter_form = FilterForm(request.args)
-    filter_form.select_label.query = Label.query.join(ProjectLabel, Label.id == ProjectLabel.label_id).filter(ProjectLabel.project_id == project_id)
+    filter_form.predicted_label.query = Label.query.join(ProjectLabel, Label.id == ProjectLabel.label_id).filter(ProjectLabel.project_id == project_id)
     q = ModelOutput.query.join(ModelIteration).join(MLModel).filter(MLModel.project_id == project_id)
     if filter_form.validate():
-        if filter_form.select_label.data:
+        if filter_form.predicted_label.data:
             q = q.filter(ModelOutput.label_id == filter_form.select_label.data.id)
+    else:
+        filter_form.threshold.data = 0.99
+    if filter_form.threshold.data:
+        q = q.filter(ModelOutput.probability >= filter_form.threshold.data)
     predictions = q.join(AudioFile).order_by(AudioFile.timestamp).order_by(ModelOutput.offset).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
     return render_template('ml/output_list.html', title='Machine Learning Output', predictions=predictions, filter_form=filter_form, project_id=project_id)
 
