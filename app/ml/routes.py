@@ -19,7 +19,7 @@ def list_outputs(project_id):
     q = ModelOutput.query.join(ModelIteration).join(MLModel).filter(MLModel.project_id == project_id)
     if filter_form.validate():
         if filter_form.predicted_label.data:
-            q = q.filter(ModelOutput.label_id == filter_form.select_label.data.id)
+            q = q.filter(ModelOutput.label_id == filter_form.predicted_label.data.id)
     else:
         filter_form.threshold.data = 0.99
     if filter_form.threshold.data:
