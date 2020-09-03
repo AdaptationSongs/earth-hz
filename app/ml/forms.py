@@ -5,8 +5,11 @@ from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 
 
+def iteration_text(row):
+    return row.model.name + ': ' + str(row.training_date)
 
 class FilterForm(FlaskForm):
+    model_iteration = QuerySelectField('Model:', get_label=iteration_text, validators=[Optional()], allow_blank=False)
     predicted_label = QuerySelectField('Predicted label:', validators=[Optional()], allow_blank=True, blank_text='(All)')
     threshold = FloatField('Threshold:', validators=[Optional(), NumberRange(min=0, max=1)])
     submit_button = SubmitField('Filter results')
