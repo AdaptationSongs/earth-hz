@@ -235,6 +235,17 @@ class ModelIteration(db.Model):
         return self.model.name + ': ' + str(self.training_date)
 
 
+class ModelLabel(db.Model):
+    __tablename__ = 'model_labels'
+    id = db.Column(db.Integer, primary_key=True)
+    iteration_id = db.Column(db.Integer, db.ForeignKey(ModelIteration.id), nullable=False)
+    iteration = db.relationship('ModelIteration')
+    label_id = db.Column(db.Integer, db.ForeignKey(Label.id), nullable=False)
+    label = db.relationship('Label', foreign_keys=[label_id])
+    combine_with_id = db.Column(db.Integer, db.ForeignKey(Label.id))
+    combine_with = db.relationship('Label', foreign_keys=[combine_with_id])
+
+
 class ModelOutput(db.Model):
     __tablename__ = 'model_outputs'
     id = db.Column(db.Integer, primary_key=True)
