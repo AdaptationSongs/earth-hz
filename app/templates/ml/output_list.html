@@ -2,10 +2,13 @@
 {% from 'bootstrap/form.html' import render_form %}
 {% from 'bootstrap/pagination.html' import render_pagination %}
 
-{% block app_content %}
-    <a href="{{ url_for('ml.upload_single_label', project_id=project_id) }}" class="btn btn-primary">Upload single label</a>
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('ml.static', filename='dist/filter-form.css') }}">
+{% endblock %}
 
-    {{ render_form(filter_form, method='get', form_type='horizontal') }}
+{% block app_content %}
+    <div id="filter-form"></div>
 
     {% for prediction in predictions.items %}
         <div class="card mt-3 mb-3">
@@ -32,3 +35,24 @@
 
     {{ render_pagination(predictions) }}
 {% endblock %}
+
+{% block scripts %}
+    {{super()}}
+    {% if config.DEBUG %}
+        <script src="https://unpkg.com/react/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom/umd/react-dom.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-bootstrap@next/dist/react-bootstrap.js" crossorigin></script>
+    {% else %}
+        <script src="https://unpkg.com/react/umd/react.production.min.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom/umd/react-dom.production.min.js" crossorigin></script>
+        <script src="https://unpkg.com/react-bootstrap@next/dist/react-bootstrap.min.js" crossorigin></script>
+    {% endif %}
+    <script src="{{ url_for('ml.static', filename='dist/filter-form.js') }}"></script>
+    <script>
+      ReactDOM.render(
+        React.createElement(ml.FilterForm, {project_id: {{ project_id }}}, null),
+        document.getElementById('filter-form')
+      );
+    </script>
+{% endblock %}
+

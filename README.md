@@ -10,6 +10,8 @@ User-friendly web framework for sharing and collaborative labeling of bioacousti
 ```bash
 apt-get install ffmpeg libavcodec-extra
 pip install -r requirements.txt
+npm install
+npm run build
 ```
 
 ## Running

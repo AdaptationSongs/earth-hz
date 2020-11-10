@@ -1,3 +1,7 @@
+# JS / React
+node_modules/
+dist/
+
 # virtual environments
 venv-dev
 
