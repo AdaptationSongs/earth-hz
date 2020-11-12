@@ -119,7 +119,6 @@ def register_callbacks(dashapp):
                 formatted_hour = ''
             link_text = 'Verify results for {label} on {date} at {station} {hour}'.format(label=label, date=selected_date, hour=formatted_hour, station=station_name)
         except:
-            raise
             url='#'
             link_text=''
         return url, link_text
