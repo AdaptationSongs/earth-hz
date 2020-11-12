@@ -21,5 +21,8 @@ layout = html.Div([
         dcc.Dropdown(id='iteration-dropdown', style={'width': '100%'}),
     ], style={'display': 'flex', 'width': '50%', 'line-height': '2em', 'margin-bottom': '0.5em'}),
     dcc.Graph(id='daily-graph'),
-    dcc.Graph(id='hourly-graph')
+    html.Div([
+        dcc.Link(id='verify-link', href='#', children='', target='_blank')
+    ]),
+    dcc.Graph(id='hourly-graph'),
 ], style={'width': '500'})
