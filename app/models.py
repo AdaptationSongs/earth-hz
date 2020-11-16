@@ -1,7 +1,7 @@
 from flask_login import UserMixin
 from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 from datetime import datetime, timedelta
-from app import db, login
+from app import db
 from flask import current_app
 
 # DB Models
@@ -15,13 +15,10 @@ class User(db.Model, UserMixin):
     avatar = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
     admin = db.Column(db.Boolean, default=False)
+    projects = db.relationship('ProjectUser', back_populates='user')
 
     def __repr__(self):
         return self.name
-
-@login.user_loader
-def load_user(id):
-    return User.query.get(int(id))
 
 
 class OAuth(OAuthConsumerMixin, db.Model):
@@ -39,6 +36,18 @@ class Project(db.Model):
 
     def __repr__(self):
         return self.name
+
+
+class ProjectUser(db.Model):
+    __tablename__ = 'project_users'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    user = db.relationship('User', back_populates='projects')
+    project_id = db.Column(db.Integer, db.ForeignKey(Project.id))
+    project = db.relationship('Project')
+    project_coordinator = db.Column(db.Boolean, default=False)
+    data_labeler = db.Column(db.Boolean, default=False)
+    data_scientist = db.Column(db.Boolean, default=False)
 
 
 class MonitoringStation(db.Model):

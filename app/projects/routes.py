@@ -3,7 +3,6 @@ from flask import render_template, flash, redirect, url_for, request, g, \
 from flask_login import current_user, login_required
 from app import db
 from app.models import Project, MonitoringStation
-from app.user.roles import admin_permission
 from app.projects import bp
 
 

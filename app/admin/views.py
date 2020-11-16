@@ -2,7 +2,7 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.menu import MenuLink
 from app import db, admin
 from app.user.roles import admin_permission
-from app.models import User, Project, MonitoringStation, EquipmentType, Equipment, ClusterGroup, LabelType, Label, Language, CommonName, ProjectLabel, MLModel, ModelIteration, ModelLabel 
+from app.models import User, Project, ProjectUser, MonitoringStation, EquipmentType, Equipment, ClusterGroup, LabelType, Label, Language, CommonName, ProjectLabel, MLModel, ModelIteration, ModelLabel 
 
 
 # Customized model view class
@@ -19,6 +19,7 @@ admin.add_link(MenuLink(name='Main Site', category='', url='/'))
 
 admin.add_view(MyModelView(User, db.session))
 admin.add_view(MyModelView(Project, db.session))
+admin.add_view(MyModelView(ProjectUser, db.session))
 admin.add_view(MyModelView(MonitoringStation, db.session))
 admin.add_view(MyModelView(EquipmentType, db.session))
 admin.add_view(MyModelView(Equipment, db.session))
