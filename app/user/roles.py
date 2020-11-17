@@ -5,15 +5,15 @@ from flask_principal import RoleNeed, UserNeed, ItemNeed, Permission
 from app import login
 from app.models import User
 
-admin_need = RoleNeed('admin')
-admin_permission = Permission(admin_need)
+
+admin_permission = Permission(RoleNeed('admin'))
 
 
 class AddLabelPermission(Permission):
     def __init__(self, project_id):
         coordinator_need = ItemNeed('project_coordinator', int(project_id), 'project_role')
         labeler_need = ItemNeed('data_labeler', int(project_id), 'project_role')
-        super(AddLabelPermission, self).__init__(admin_need, coordinator_need, labeler_need)
+        super(AddLabelPermission, self).__init__(RoleNeed('admin'), RoleNeed('project_coordinator'), RoleNeed('data_labeler'), coordinator_need, labeler_need)
 
 
 class ViewResultsPermission(Permission):
@@ -21,14 +21,14 @@ class ViewResultsPermission(Permission):
         coordinator_need = ItemNeed('project_coordinator', int(project_id), 'project_role')
         labeler_need = ItemNeed('data_labeler', int(project_id), 'project_role')
         scientist_need = ItemNeed('data_scientist', int(project_id), 'project_role')
-        super(ViewResultsPermission, self).__init__(admin_need, coordinator_need, labeler_need, scientist_need)
+        super(ViewResultsPermission, self).__init__(RoleNeed('admin'), RoleNeed('project_coordinator'), RoleNeed('data_labeler'), RoleNeed('data_scientist'), coordinator_need, labeler_need, scientist_need)
 
 
 class UploadDataPermission(Permission):
     def __init__(self, project_id):
         coordinator_need = ItemNeed('project_coordinator', int(project_id), 'project_role')
         scientist_need = ItemNeed('data_scientist', int(project_id), 'project_role')
-        super(UploadDataPermission, self).__init__(admin_need, coordinator_need, scientist_need)
+        super(UploadDataPermission, self).__init__(RoleNeed('admin'), RoleNeed('project_coordinator'), RoleNeed('data_scientist'), coordinator_need, scientist_need)
 
 
 @login.user_loader
@@ -50,12 +50,22 @@ def on_identity_loaded(sender, identity):
             identity.provides.add(RoleNeed('admin'))
 
     # Get all project roles
+    # If not assigned to a project, treat it as a global role
     if hasattr(current_user, 'projects'):
         for project in current_user.projects:
             if project.project_coordinator:
-                identity.provides.add(ItemNeed('project_coordinator', project.project_id, 'project_role'))
+                if project.project_id is None:
+                    identity.provides.add(RoleNeed('project_coordinator'))
+                else:
+                    identity.provides.add(ItemNeed('project_coordinator', project.project_id, 'project_role'))
             if project.data_labeler:
-                identity.provides.add(ItemNeed('data_labeler', project.project_id, 'project_role'))
+                if project.project_id is None:
+                    identity.provides.add(RoleNeed('data_labeler'))
+                else:
+                    identity.provides.add(ItemNeed('data_labeler', project.project_id, 'project_role'))
             if project.data_scientist:
-                identity.provides.add(ItemNeed('data_scientist', project.project_id, 'project_role'))
+                if project.project_id is None:
+                    identity.provides.add(RoleNeed('data_scientist'))
+                else:
+                    identity.provides.add(ItemNeed('data_scientist', project.project_id, 'project_role'))
 
