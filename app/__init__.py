@@ -3,7 +3,6 @@ from flask import Flask, request, current_app
 from flask.helpers import get_root_path
 from flask.json import JSONEncoder
 from datetime import date
-from flask_behind_proxy import FlaskBehindProxy
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, login_required
@@ -35,7 +34,6 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     # initialize plugins
-    proxied_app = FlaskBehindProxy(app)
     db.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
