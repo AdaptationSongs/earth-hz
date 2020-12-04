@@ -51,7 +51,7 @@
             $(audio).attr('src', '/stream_file/'+wav_file+'.mp3');
             $('#current-file').text(wav_file);
             $('#replay-btn').removeClass('disabled');
-            $('#label-btn').removeClass('disabled').attr('href', '/clip/'+wav_file+'/0.0');
+            $('#label-btn').removeClass('disabled').attr('href', '/labels/clip/'+wav_file+'/0.0');
             $('#spec-img').removeClass('d-none').attr('src', '/spectrogram/'+wav_file+'-0.0.png');
             audio.load();
             audio.play();
@@ -65,7 +65,7 @@
                     $('#replay-btn').click(function() {
                         playSelection(current_offset, 5);
                     });
-                    $('#label-btn').attr('href', '/clip/'+wav_file+'/'+offset_string);
+                    $('#label-btn').attr('href', '/labels/clip/'+wav_file+'/'+offset_string);
                     $('#spec-img').attr('src', '/spectrogram/'+wav_file+'-'+offset_string+'.png');
                 }
             });

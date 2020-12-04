@@ -19,12 +19,8 @@
                     <p class="card-text">Recording device: {{ prediction.file.sn }}</p>
                     <p class="card-text">Predicted label: {{ prediction.label }}</p>
                     <p class="card-text">Probability: {{ prediction.probability }}</p>
-                    <p class="card-text">Manual labels: <ul>
-                        {% for clip in prediction.labeled_clips() %}
-                            <li>{{ clip.label.name }}{% if not clip.certain %} (maybe){% endif %}</li>
-                        {% endfor %}
-                    </ul></p>
-                    <a class="btn btn-primary" href="{{ url_for('labels.view_clip', file_name=prediction.file.name, offset=prediction.offset) }}">Label</a>
+                    <div id="label-block-{{ loop.index }}" data-filename="{{ prediction.file_name }}" data-offset="{{ prediction.offset }}" data-duration="{{ prediction.duration }}"></div>
+                    <a href="{{ url_for('labels.view_clip', file_name=prediction.file_name, offset=prediction.offset) }}">View/Edit Clip Labels</a>
                 </div>
                 <div class="col-md-6">
                     <img class="card-img-top" src="{{ url_for('audio.spectro', file_name=prediction.file_name, offset=prediction.offset) }}">
@@ -48,11 +44,25 @@
         <script src="https://unpkg.com/react-bootstrap@next/dist/react-bootstrap.min.js" crossorigin></script>
     {% endif %}
     <script src="{{ url_for('ml.static', filename='dist/filter-form.js') }}"></script>
+    <script src="{{ url_for('labels.static', filename='dist/labels.js') }}"></script>
     <script>
       ReactDOM.render(
         React.createElement(ml.FilterForm, {project_id: {{ project_id }}}, null),
         document.getElementById('filter-form')
       );
+      for (i = 1; i <= {{ predictions.items | length }}; i++) {
+        const block = document.getElementById('label-block-' + i);
+        const props = {
+          project_id: {{ project_id }},
+          file_name: block.getAttribute('data-filename'),
+          offset: block.getAttribute('data-offset'),
+          duration: block.getAttribute('data-duration')
+        };
+        ReactDOM.render(
+          React.createElement(labels.LabelContainer, props, null),
+          block
+        );
+      }
     </script>
 {% endblock %}
 

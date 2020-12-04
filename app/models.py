@@ -99,6 +99,7 @@ class AudioFile(db.Model):
     __tablename__ = 'audio_files'
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     sn = db.Column(db.String(255))
+    recording_device = db.relationship('Equipment', foreign_keys=[sn], primaryjoin='Equipment.serial_number == AudioFile.sn')
     timestamp = db.Column(db.DateTime)
     path = db.Column(db.String(255))
     name = db.Column(db.String(255), unique=True)
@@ -162,6 +163,7 @@ class Label(db.Model):
     name = db.Column(db.String(255), unique=True, nullable=False)
     type_id = db.Column(db.Integer, db.ForeignKey(LabelType.id), nullable=False)
     type = db.relationship('LabelType')
+    common_names = db.relationship('CommonName', back_populates='label')
 
     def __repr__(self):
         return self.name
@@ -181,7 +183,7 @@ class CommonName(db.Model):
     __tablename__ = 'common_name'
     id = db.Column(db.Integer, primary_key=True)
     label_id = db.Column(db.Integer, db.ForeignKey(Label.id), nullable=False)
-    label = db.relationship('Label')
+    label = db.relationship('Label', back_populates='common_names')
     language_id = db.Column(db.Integer, db.ForeignKey(Language.id), nullable=False)
     language = db.relationship('Language')
     name = db.Column(db.String(255), nullable=False)

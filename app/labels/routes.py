@@ -2,7 +2,8 @@ from flask import render_template, abort, flash, redirect, url_for, request, g, 
     jsonify, current_app, Response
 from flask_login import current_user, login_required
 from app import db
-from app.models import User, AudioFile, Label, LabelType, LabeledClip, Equipment, MonitoringStation, Project, ProjectLabel
+from app.models import User, AudioFile, Label, LabelType, LabeledClip, Equipment, MonitoringStation, Project, ProjectLabel, CommonName
+from app.schema import LabelTypeSchema, ProjectLabelSchema, LabeledClipSchema
 from app.user.roles import ViewResultsPermission, AddLabelPermission, UploadDataPermission
 from app.labels import bp
 from app.labels.forms import FilterForm, EditForm, DeleteForm
@@ -10,9 +11,8 @@ from datetime import datetime
 from sqlalchemy.orm import aliased
 import flask_excel as excel
 
-
-@bp.route('/labels')
-@bp.route('/labels/project/<project_id>')
+@bp.route('/')
+@bp.route('/project/<project_id>')
 @login_required
 def list_labels(project_id=None):
     permission = ViewResultsPermission(project_id)
@@ -33,7 +33,7 @@ def list_labels(project_id=None):
     # permission denied
     abort(403)
 
-@bp.route('/labels/project/<project_id>/download-labels.csv')
+@bp.route('/project/<project_id>/download-labels.csv')
 @login_required
 def export_csv(project_id):
     permission = UploadDataPermission(project_id)
@@ -98,3 +98,56 @@ def _get_labels(project_id):
     sub_type = sub_query.first().type.name if sub_labels else None
     label_json = {'labels':labels, 'sub':{'type':sub_type, 'labels':sub_labels}}
     return jsonify(label_json)
+
+
+@bp.route('/_get_label_types')
+def _get_label_types():
+    q = LabelType.query
+    all_types = q.all()
+    label_types_schema = LabelTypeSchema(many=True)
+    return label_types_schema.jsonify(all_types)
+
+
+@bp.route('/_get_project_labels/<project_id>')
+def _get_project_labels(project_id):
+    q = ProjectLabel.query.filter(ProjectLabel.project_id == project_id)
+    q = q.join(Label).order_by(Label.name)
+    project_labels = q.all()
+    project_labels_schema = ProjectLabelSchema(many=True)
+    return project_labels_schema.jsonify(project_labels)
+
+
+@bp.route('/_get_clip_labels/<file_name>')
+def _get_clip_labels(file_name):
+    q = LabeledClip.query.filter(LabeledClip.file_name == file_name)
+    offset = request.args.get('offset', type=float)
+    if offset:
+        q = q.filter(LabeledClip.offset == offset)
+    duration = request.args.get('duration', type=float)
+    if duration:
+        q = q.filter(LabeledClip.duration == duration)
+    clip_labels = q.all()
+    labeled_clips_schema = LabeledClipSchema(many=True)
+    return labeled_clips_schema.jsonify(clip_labels)
+
+
+@bp.route('/_add_clip_label', methods=['POST'])
+def _add_clip_label():
+    data = request.get_json()
+    audio_file = AudioFile.query.filter(AudioFile.name == data['file_name']).first()
+    project_id = audio_file.recording_device.station.project_id
+    permission = AddLabelPermission(project_id)
+    if permission.can():
+        q = LabeledClip.query.filter(LabeledClip.file_name == data['file_name'], LabeledClip.offset == data['offset'], LabeledClip.duration == data['duration'], LabeledClip.label_id == data['label_id'], LabeledClip.user_id == current_user.id)
+        if data['sub_label_id']:
+            q = q.filter(LabeledClip.sub_label_id == data['sub_label_id'])
+        existing_label = q.first()
+        if existing_label:
+            return jsonify({'message': 'You have already added this label'}), 409
+        data['user_id'] = current_user.id
+        labeled_clip_schema = LabeledClipSchema()
+        new_label = labeled_clip_schema.load(data)
+        db.session.add(new_label)
+        db.session.commit()
+        return labeled_clip_schema.jsonify(new_label)
+    return jsonify({'message': 'Permission denied'}), 403

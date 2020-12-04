@@ -521,7 +521,7 @@ export class FilterForm extends React.Component {
         >
           {open ? '-' : '+'} Search Options
         </Button>
-        <Collapse in={open}>
+        <Collapse mountOnEnter={true} in={open}>
           <form id="search-options" method="get" onSubmit={this.handleSubmit.bind(this)}>
             <Row>
               <Col lg="5">

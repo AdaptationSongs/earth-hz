@@ -4,6 +4,7 @@ from flask.helpers import get_root_path
 from flask.json import JSONEncoder
 from datetime import date
 from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_login import LoginManager, login_required
 from flask_session import Session
@@ -14,6 +15,7 @@ import flask_excel as excel
 from config import Config
 
 db = SQLAlchemy()
+ma = Marshmallow()
 migrate = Migrate()
 login = LoginManager()
 sess = Session()
@@ -35,6 +37,7 @@ def create_app(config_class=Config):
 
     # initialize plugins
     db.init_app(app)
+    ma.init_app(app)
     migrate.init_app(app, db)
     login.init_app(app)
     login.login_view = 'user_views.login'
@@ -81,7 +84,7 @@ def register_blueprints(app):
     app.register_blueprint(clusters_bp)
 
     from app.labels import bp as labels_bp
-    app.register_blueprint(labels_bp)
+    app.register_blueprint(labels_bp, url_prefix='/labels')
 
     from app.ml import bp as ml_bp
     app.register_blueprint(ml_bp, url_prefix='/ml')
