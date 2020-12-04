@@ -62,7 +62,7 @@ def view_clip(file_name, offset):
     view_permission = ViewResultsPermission(project_id)
     if form.validate_on_submit():
         if add_permission.can():
-            label = LabeledClip(file_name=file_name, offset=offset, certain=form.certainty.data, label=form.select_label.data, sub_label=form.select_sub_label.data, notes=form.notes.data, user=current_user, modified=datetime.utcnow())
+            label = LabeledClip(file_name=file_name, offset=offset, duration=current_app.config['CLIP_SECS'], certain=form.certainty.data, label=form.select_label.data, sub_label=form.select_sub_label.data, notes=form.notes.data, user=current_user, modified=datetime.utcnow())
             db.session.add(label)
             db.session.commit()
             flash('Label added.')
