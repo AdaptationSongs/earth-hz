@@ -67,7 +67,6 @@ def view_cluster(group_id, cluster_name):
 @bp.route('/clusters/project/<project_id>/upload', methods=['GET', 'POST'])
 @login_required
 def upload(project_id):
-    project_id = ClusterGroup.query.get(group_id).project_id
     permission = UploadDataPermission(project_id)
     if permission.can():
         current_project = Project.query.get(project_id)
