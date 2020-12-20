@@ -200,6 +200,7 @@ class LabeledClip(db.Model):
     file = db.relationship('AudioFile')
     offset = db.Column(db.Float, index=True)
     duration = db.Column(db.Float)
+    exact_time = db.Column(db.Boolean, default=False) 
     label_id = db.Column(db.Integer, db.ForeignKey(Label.id), index=True)
     label = db.relationship('Label', foreign_keys=[label_id])
     sub_label_id = db.Column(db.Integer, db.ForeignKey(Label.id))
