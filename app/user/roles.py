@@ -1,34 +1,7 @@
-from collections import namedtuple
-from functools import partial
 from flask_login import current_user
-from flask_principal import RoleNeed, UserNeed, ItemNeed, Permission
+from flask_principal import RoleNeed, UserNeed, ItemNeed
 from app import login
 from app.models import User
-
-
-admin_permission = Permission(RoleNeed('admin'))
-
-
-class AddLabelPermission(Permission):
-    def __init__(self, project_id):
-        coordinator_need = ItemNeed('project_coordinator', int(project_id), 'project_role')
-        labeler_need = ItemNeed('data_labeler', int(project_id), 'project_role')
-        super(AddLabelPermission, self).__init__(RoleNeed('admin'), RoleNeed('project_coordinator'), RoleNeed('data_labeler'), coordinator_need, labeler_need)
-
-
-class ViewResultsPermission(Permission):
-    def __init__(self, project_id):
-        coordinator_need = ItemNeed('project_coordinator', int(project_id), 'project_role')
-        labeler_need = ItemNeed('data_labeler', int(project_id), 'project_role')
-        scientist_need = ItemNeed('data_scientist', int(project_id), 'project_role')
-        super(ViewResultsPermission, self).__init__(RoleNeed('admin'), RoleNeed('project_coordinator'), RoleNeed('data_labeler'), RoleNeed('data_scientist'), coordinator_need, labeler_need, scientist_need)
-
-
-class UploadDataPermission(Permission):
-    def __init__(self, project_id):
-        coordinator_need = ItemNeed('project_coordinator', int(project_id), 'project_role')
-        scientist_need = ItemNeed('data_scientist', int(project_id), 'project_role')
-        super(UploadDataPermission, self).__init__(RoleNeed('admin'), RoleNeed('project_coordinator'), RoleNeed('data_scientist'), coordinator_need, scientist_need)
 
 
 @login.user_loader

@@ -6,6 +6,7 @@ from app import db
 from app.models import User, AudioFile, Equipment, MonitoringStation, Project
 from app.audio import bp
 from app.audio.forms import FilterForm
+from app.user.permissions import ListenPermission
 import io
 import sys
 import re
@@ -76,46 +77,52 @@ def after_request(response):
 @bp.route('/wav/<file_name>')
 @login_required
 def stream_wav(file_name):
-    wav_file = AudioFile.query.filter_by(name=file_name).first()
-    size = wav_file.size
-    byte1, byte2, length = get_byte_range(request, size)
-    vfs = get_azure_vfs()
-    with vfs.open(wav_file.path+'/'+wav_file.name) as f:
-        f.seek(byte1)
-        data = f.read(length)
-    response = Response(data,
-        206,
-        mimetype='audio/x-wav',
-        direct_passthrough=True)
-    response.headers.add('Content-Range', 'bytes {0}-{1}/{2}'.format(byte1, byte1 + length - 1, size))
+    permission = ListenPermission(file_name)
+    if permission.can():
+        wav_file = AudioFile.query.filter_by(name=file_name).first()
+        size = wav_file.size
+        byte1, byte2, length = get_byte_range(request, size)
+        vfs = get_azure_vfs()
+        with vfs.open(wav_file.path+'/'+wav_file.name) as f:
+            f.seek(byte1)
+            data = f.read(length)
+        response = Response(data, 206, mimetype='audio/x-wav', direct_passthrough=True)
+        response.headers.add('Content-Range', 'bytes {0}-{1}/{2}'.format(byte1, byte1 + length - 1, size))
+    else:
+        response = Response('Restricted audio', 403)
     return response
 
 
 @bp.route('/stream_file/<file_name>.<file_type>')
 @login_required
 def stream_compressed(file_name, file_type):
-    wav_file = AudioFile.query.filter_by(name=file_name).first()
-    vfs = get_azure_vfs()
-    with vfs.open(wav_file.path+'/'+wav_file.name) as f:
-        out_f, output_mime = compress_audio(f, file_type)
-    size = sys.getsizeof(out_f)
-    byte1, byte2, length = get_byte_range(request, size)
-    out_f.seek(byte1)
-    data = out_f.read(length)
-    response = Response(data,
-        206,
-        mimetype=output_mime,
-        direct_passthrough=True)
-    response.headers.add('Content-Range', 'bytes {0}-{1}/{2}'.format(byte1, byte1 + length - 1, size))
+    permission = ListenPermission(file_name)
+    if permission.can():
+        wav_file = AudioFile.query.filter_by(name=file_name).first()
+        vfs = get_azure_vfs()
+        with vfs.open(wav_file.path+'/'+wav_file.name) as f:
+            out_f, output_mime = compress_audio(f, file_type)
+        size = sys.getsizeof(out_f)
+        byte1, byte2, length = get_byte_range(request, size)
+        out_f.seek(byte1)
+        data = out_f.read(length)
+        response = Response(data, 206, mimetype=output_mime, direct_passthrough=True)
+        response.headers.add('Content-Range', 'bytes {0}-{1}/{2}'.format(byte1, byte1 + length - 1, size))
+    else:
+        response = Response('Restricted audio', 403) 
     return response
 
 
 @bp.route('/stream_clip/<file_name>-<offset>.<file_type>')
 @login_required
 def stream_clip(file_name, offset, file_type):
-    clip = get_clip(file_name, offset)
-    out_f, output_mime = compress_audio(clip, file_type)
-    response = Response(out_f.getvalue(), mimetype=output_mime)
+    permission = ListenPermission(file_name)
+    if permission.can():
+        clip = get_clip(file_name, offset)
+        out_f, output_mime = compress_audio(clip, file_type)
+        response = Response(out_f.getvalue(), mimetype=output_mime)
+    else:
+        response = Response('Restricted audio', 403)
     return response
 
 

@@ -1,7 +1,7 @@
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.menu import MenuLink
 from app import db, admin
-from app.user.roles import admin_permission
+from app.user.permissions import admin_permission
 from app.models import User, Project, ProjectUser, MonitoringStation, EquipmentType, Equipment, ClusterGroup, LabelType, Label, Language, CommonName, ProjectLabel, MLModel, ModelIteration, ModelLabel 
 
 

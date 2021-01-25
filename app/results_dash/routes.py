@@ -1,6 +1,6 @@
 from flask import render_template, abort
 from flask_login import current_user, login_required
-from app.user.roles import ViewResultsPermission
+from app.user.permissions import ViewResultsPermission
 from app.results_dash import bp
 
 

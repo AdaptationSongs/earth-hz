@@ -164,6 +164,7 @@ class Label(db.Model):
     type_id = db.Column(db.Integer, db.ForeignKey(LabelType.id), nullable=False)
     type = db.relationship('LabelType')
     common_names = db.relationship('CommonName', back_populates='label')
+    restricted = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return self.name

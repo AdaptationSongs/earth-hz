@@ -3,7 +3,7 @@ from flask import render_template, abort, flash, redirect, url_for, request, g, 
 from flask_login import current_user, login_required
 from app import db
 from app.models import User, AudioFile, Cluster, ClusterGroup, Project
-from app.user.roles import ViewResultsPermission, UploadDataPermission
+from app.user.permissions import ViewResultsPermission, UploadDataPermission
 from app.clusters import bp
 from app.clusters.forms import FilterForm, DeleteForm
 from app.clusters.forms import UploadForm

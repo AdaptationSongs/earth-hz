@@ -4,7 +4,7 @@ from flask_login import current_user, login_required
 from app import db
 from app.models import User, AudioFile, Label, LabelType, LabeledClip, Equipment, MonitoringStation, Project, ProjectLabel, CommonName
 from app.schema import LabelTypeSchema, ProjectLabelSchema, LabeledClipSchema
-from app.user.roles import ViewResultsPermission, AddLabelPermission, UploadDataPermission
+from app.user.permissions import ViewResultsPermission, AddLabelPermission, UploadDataPermission
 from app.labels import bp
 from app.labels.forms import FilterForm, EditForm, DeleteForm
 from datetime import datetime

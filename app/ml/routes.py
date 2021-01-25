@@ -4,7 +4,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import extract, func, and_
 from app import db
 from app.models import AudioFile, Equipment, MLModel, ModelIteration, ModelOutput, Project, ProjectLabel, Label, ModelLabel, LabeledClip
-from app.user.roles import ViewResultsPermission, UploadDataPermission
+from app.user.permissions import ViewResultsPermission, UploadDataPermission
 from app.ml import bp
 from app.ml.forms import FilterForm, UploadForm
 import pandas as pd
