@@ -47,7 +47,8 @@
          if (event.originalTarget) {
            error = error.originalTarget.error;
          }
-         alert(`Audio error: ${error.message}`);
+         console.log(`Audio error: ${error.message}`);
+         alert('Sorry, this audio is unavailable for listening.');
        }, true);
 
     </script>
