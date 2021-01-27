@@ -18,7 +18,7 @@ def list_labels(project_id=None):
     permission = ViewResultsPermission(project_id)
     if permission.can():
         page = request.args.get('page', 1, type=int)
-        filter_form = FilterForm(request.args)
+        filter_form = FilterForm(request.args, csrf_enabled=False)
         fq = Label.query.join(LabelType).filter(LabelType.parent_id == None)
         q = LabeledClip.query.join(AudioFile)
         if project_id:

@@ -150,7 +150,7 @@ def spectro(file_name, offset):
 @login_required
 def list_files(project_id=None):
     page = request.args.get('page', 1, type=int)
-    filter_form = FilterForm(request.args)
+    filter_form = FilterForm(request.args, csrf_enabled=False)
     q = AudioFile.query.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation)
     fq = MonitoringStation.query
     if project_id:
