@@ -17,6 +17,9 @@ def on_identity_loaded(sender, identity):
     if hasattr(current_user, 'id'):
         identity.provides.add(UserNeed(current_user.id))
 
+    # Default role
+    identity.provides.add(RoleNeed('data_labeler'))
+
     # If the user account has the admin flag, make them a global admin
     if hasattr(current_user, 'admin'):
         if current_user.admin:
