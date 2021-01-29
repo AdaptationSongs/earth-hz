@@ -37,3 +37,9 @@ class ListenPermission(Permission):
             project_need = UserNeed(current_user.id)
         super(ListenPermission, self).__init__(RoleNeed('admin'), RoleNeed('project_coordinator'), project_need)
 
+
+class ManageLabelsPermission(Permission):
+    def __init__(self, project_id):
+        coordinator_need = ItemNeed('project_coordinator', int(project_id), 'project_role')
+        super(ManageLabelsPermission, self).__init__(RoleNeed('admin'), RoleNeed('project_coordinator'), coordinator_need)
+

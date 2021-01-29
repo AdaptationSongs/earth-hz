@@ -4,7 +4,7 @@ from flask_login import current_user, login_required
 from app import db
 from app.models import User, AudioFile, Label, LabelType, LabeledClip, Equipment, MonitoringStation, Project, ProjectLabel, CommonName
 from app.schema import LabelTypeSchema, ProjectLabelSchema, LabeledClipSchema
-from app.user.permissions import ViewResultsPermission, AddLabelPermission, UploadDataPermission
+from app.user.permissions import ViewResultsPermission, AddLabelPermission, UploadDataPermission, ManageLabelsPermission
 from app.labels import bp
 from app.labels.forms import FilterForm, EditForm, DeleteForm
 from datetime import datetime
@@ -20,14 +20,18 @@ def list_labels(project_id=None):
         page = request.args.get('page', 1, type=int)
         filter_form = FilterForm(request.args, csrf_enabled=False)
         fq = Label.query.join(LabelType).filter(LabelType.parent_id == None)
-        q = LabeledClip.query.join(AudioFile)
+        q = LabeledClip.query.join(AudioFile).join(LabeledClip.label)
+        view_restricted = ManageLabelsPermission(project_id)
+        if not view_restricted.can():
+            q = q.filter((Label.restricted == False) | (Label.restricted == None))
+            print(q)
         if project_id:
             q = q.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == project_id)
             fq = fq.join(ProjectLabel, Label.id == ProjectLabel.label_id).filter(ProjectLabel.project_id == project_id)
         filter_form.select_label.query = fq
         if filter_form.validate():
             if filter_form.select_label.data:
-                q = q.join(LabeledClip.label).filter(Label.id == filter_form.select_label.data.id)
+                q = q.filter(Label.id == filter_form.select_label.data.id)
         clips = q.order_by(AudioFile.timestamp).order_by(LabeledClip.offset).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
         return render_template('labels/label_list.html', title='Labels', clips=clips, project_id=project_id, filter_form=filter_form)
     # permission denied
