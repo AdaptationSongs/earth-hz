@@ -13,7 +13,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=True)
     avatar = db.Column(db.String(200))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow())
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     admin = db.Column(db.Boolean, default=False)
     projects = db.relationship('ProjectUser', back_populates='user')
 
@@ -210,7 +210,7 @@ class LabeledClip(db.Model):
     user = db.relationship('User')
     certain = db.Column(db.Boolean, default=True)
     notes = db.Column(db.String(255), nullable=True)
-    modified = db.Column(db.DateTime, default=datetime.utcnow())
+    modified = db.Column(db.DateTime, default=datetime.utcnow)
 
     def start_time(self):
         return str(self.file.timestamp + timedelta(seconds=self.offset))
@@ -241,7 +241,7 @@ class ModelIteration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     model_id = db.Column(db.Integer, db.ForeignKey(MLModel.id), nullable=False)
     model = db.relationship('MLModel')
-    training_date = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
+    training_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     description = db.Column(db.String(255))
 
     def __repr__(self):
