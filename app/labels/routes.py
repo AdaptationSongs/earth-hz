@@ -125,7 +125,7 @@ def _get_project_labels(project_id):
 def _get_clip_labels(file_name):
     q = LabeledClip.query.filter(LabeledClip.file_name == file_name)
     offset = request.args.get('offset', type=float)
-    if offset:
+    if offset is not None:
         q = q.filter(LabeledClip.offset == offset)
     duration = request.args.get('duration', type=float)
     if duration:
