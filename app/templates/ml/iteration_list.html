@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+
+{% block app_content %}
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=project.id) }}">{{ project.name }}</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_models', project_id=project.id) }}">Machine Learning Models</a></li>
+      <li class="breadcrumb-item active">{{ model.name }}</li>
+    </ol>
+  </nav>
+  <h3>Iterations</h3>
+  <a class="btn btn-primary" href="{{ url_for('ml.new_iteration', model_id=model.id) }}">New iteration</a>
+  <table class="table">
+    <th>Last updated</th>
+    <th>Status</th>
+    <th>Notes</th>
+    {% for iteration in iterations.items %}
+      <tr>
+        <td><a href="{{ url_for('ml.view_iteration', iteration_id=iteration.id)  }}">{{ iteration.updated }}</a></td>
+        <td>{{ iteration.status }}</td>
+        <td>{{ iteration.description }}</td>
+      </tr>
+    {% endfor  %}
+  </table>
+  {{ render_pagination(iterations) }}
+{% endblock %}

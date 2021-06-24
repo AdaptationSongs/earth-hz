@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+{% from 'bootstrap/form.html' import render_form %}
+
+{% block app_content %}
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=project.id) }}">{{ project.name }}</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_models', project_id=project.id) }}">Machine Learning Models</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_iterations', model_id=model.id) }}">{{ model.name }}</a></li>
+      <li class="breadcrumb-item active">{{ iteration.updated }}</li>
+    </ol>
+  </nav>
+  <h2>Model Iteration {{ iteration.updated }}</h2>
+  <p>{{ iteration.description }} <a href="{{ url_for('ml.edit_iteration', iteration_id=iteration.id) }}">edit</a></p>
+  <p><a href="{{ url_for('ml.copy_iteration', iteration_id=iteration.id) }}">New iteration based on this one</a></p>
+  <h3>Current Status: {{ iteration.status }}</h3>
+  {% if previous_form %}
+    {{ render_form(previous_form, action = url_for('ml.previous_status', iteration_id=iteration.id), extra_classes='d-inline-block') }}
+  {% endif %}
+  {% if next_form %}
+    {{ render_form(next_form, action = url_for('ml.next_status', iteration_id=iteration.id), extra_classes='d-inline-block', button_map={'next_button': 'success'}) }}
+  {% endif %}
+  <h3>Labels for training</h3>
+  <a class="btn btn-primary" href="{{ url_for('ml.add_label', iteration_id=iteration.id) }}">Add label</a>
+  <table class="table">
+    <th>Label</th>
+    <th>Clips</th>
+    <th>Common names</th>
+    <th>Combine with</th>
+    <th>Actions</th>
+    {% for label in labels.items %}
+      <tr>
+        <td><a href="{{ url_for('labels.list_labels', project_id=project.id, select_label=label.label.id) }}">{{ label.label.name }}</a></td>
+        <td>{{ label.project_label().clip_count }}</td>
+        <td>
+          <ul>
+            {% for common_name in label.label.common_names %}
+              <li>{{ common_name.name }} ({{ common_name.language.name }})</li>
+            {% endfor %}
+          </ul>
+        </td>
+        <td>{{ label.combine_with }} <a href="{{ url_for('ml.edit_label', iteration_id=iteration.id, label_id=label.label.id) }}">edit</a></td>
+        <td>{{ render_form(delete_form, action=url_for('ml.delete_label', iteration_id=iteration.id, label_id=label.label.id), button_map={'delete_button': 'danger'}) }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+  {{ render_pagination(labels) }}
+{% endblock %}

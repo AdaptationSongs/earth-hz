@@ -65,7 +65,7 @@ class ModelSelect extends React.Component {
           {this.state.models.map((model) => <option key={model.id} value={model.id}>{model.name}</option>)}
         </select>
         <select name="iteration" value={this.props.iteration || ""} onChange={this.handleIterationChange.bind(this)}>
-          {this.state.iterations.map((iteration) => <option key={iteration.id} value={iteration.id}>{iteration.training_date}</option>)}
+          {this.state.iterations.map((iteration) => <option key={iteration.id} value={iteration.id}>{iteration.updated}</option>)}
         </select>
       </span>
     );

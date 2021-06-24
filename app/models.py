@@ -1,8 +1,11 @@
 from flask_login import UserMixin
 from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
+from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import datetime, timedelta
+import enum
 from app import db
 from flask import current_app
+
 
 # DB Models
 
@@ -33,6 +36,8 @@ class Project(db.Model):
     name = db.Column(db.String(255), nullable=False)
     country = db.Column(db.String(255), nullable=False)
     description = db.Column(db.String(255))
+    labels = db.relationship('ProjectLabel', back_populates='project', lazy='dynamic')
+    models = db.relationship('MLModel', back_populates='project', lazy='dynamic')
 
     def __repr__(self):
         return self.name
@@ -224,28 +229,68 @@ class ProjectLabel(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey(Project.id), nullable=False)
     project = db.relationship('Project')
 
+    @hybrid_property
+    def clip_count(self):
+        return LabeledClip.query.join(AudioFile).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == self.project_id).filter(LabeledClip.label_id == self.label_id).count()
+
+    @clip_count.expression
+    def clip_count(cls):
+        q = db.select([db.func.count(LabeledClip.id)])
+        q = q.select_from(db.join(q.froms[0], AudioFile).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation)).where(MonitoringStation.project_id == cls.project_id).where(LabeledClip.label_id == cls.label_id)
+        return q
+
 
 class MLModel(db.Model):
     __tablename__ = 'ml_models'
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey(Project.id), nullable=False)
-    project = db.relationship('Project')
+    project = db.relationship('Project', back_populates='models')
     name = db.Column(db.String(255))
+    description = db.Column(db.String(255))
+    iterations = db.relationship('ModelIteration', back_populates='model', lazy='dynamic')
 
     def __repr__(self):
         return self.name
+
+
+class StatusEnum(enum.Enum):
+    labeling = 'Labeling'
+    ready_to_train = 'Ready to train'
+    training = 'Training'
+    trained = 'Trained'
+    ready_to_run = 'Ready to run'
+    running = 'Running'
+    finished = 'Finished'
+
+    def __str__(self):
+        return self.value
 
 
 class ModelIteration(db.Model):
     __tablename__ = 'model_iterations'
     id = db.Column(db.Integer, primary_key=True)
     model_id = db.Column(db.Integer, db.ForeignKey(MLModel.id), nullable=False)
-    model = db.relationship('MLModel')
-    training_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    model = db.relationship('MLModel', back_populates='iterations')
+    updated = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     description = db.Column(db.String(255))
+    status = db.Column(db.Enum(StatusEnum), default=StatusEnum.labeling)
 
     def __repr__(self):
-        return self.model.name + ': ' + str(self.training_date)
+        return self.model.name + ': ' + str(self.updated)
+
+    def next_status(self):
+        if self.status == StatusEnum.labeling:
+            return StatusEnum.ready_to_train
+        elif self.status == StatusEnum.trained:
+            return StatusEnum.ready_to_run
+        else:
+            return None
+
+    def previous_status(self):
+        if self.status == StatusEnum.ready_to_train or self.status == StatusEnum.trained or self.status == StatusEnum.ready_to_run:
+            return StatusEnum.labeling
+        else:
+            return None
 
 
 class ModelLabel(db.Model):
@@ -257,6 +302,9 @@ class ModelLabel(db.Model):
     label = db.relationship('Label', foreign_keys=[label_id])
     combine_with_id = db.Column(db.Integer, db.ForeignKey(Label.id))
     combine_with = db.relationship('Label', foreign_keys=[combine_with_id])
+
+    def project_label(self):
+        return ProjectLabel.query.filter(ProjectLabel.project_id == self.iteration.model.project_id).filter(ProjectLabel.label_id == self.label_id).first()
 
 
 class ModelOutput(db.Model):

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+
+{% block app_content %}
+  <h2>{{ project.name }}</h2>
+  <p>{{ project.description }}</p>
+  <div class="row">
+    <div class="col">
+      <h3>Top Labels</h3>
+      <ul>
+        {% for project_label in project_labels %}
+          <li>
+            <a href="{{ url_for('labels.list_labels', project_id=project.id, select_label=project_label.label.id) }}">{{ project_label.label.name }}</a>: {{ project_label.clip_count }} labeled clips
+            <ul>
+              {% for common_name in project_label.label.common_names %}
+                <li>{{ common_name.name }} ({{ common_name.language.name }})</li>
+              {% endfor %}
+            </ul>
+          </li>
+        {% endfor %}
+      </ul>
+      <a href="{{ url_for('projects.list_labels', project_id=project.id) }}">All project labels</a>
+    </div>
+    <div class="col">
+      <h3>Recent Model Iterations</h3>
+      <ul>
+        {% for iteration in iterations %}
+          <li><a href="{{ url_for('ml.view_iteration', iteration_id=iteration.id) }}">{{ iteration.model.name }} {{ iteration.updated }}</a></li>
+        {% endfor %}
+      </ul>
+      <a href="{{ url_for('ml.list_models', project_id=project.id) }}">All project models</a>
+    </div>
+  </div>
+{% endblock %}
+
+

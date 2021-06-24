@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+
+{% block app_content %}
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=project.id) }}">{{ project.name }}</a></li>
+      <li class="breadcrumb-item active">Project Labels</li>
+    </ol>
+  </nav>
+  <h3>Project labels</h3>
+  <table class="table">
+    <th>Label</th>
+    <th>Clips</th>
+    <th>Common names</th>
+    <th>Actions</th>
+    {% for label in labels.items %}
+      <tr>
+        <td><a href="{{ url_for('labels.list_labels', project_id=project.id, select_label=label.label.id) }}">{{ label.label.name }}</a></td>
+        <td>{{ label.clip_count }}</td>
+        <td>
+          <ul>
+            {% for common_name in label.label.common_names %}
+              <li>{{ common_name.name }} ({{ common_name.language.name }})</li>
+            {% endfor %}
+          </ul>
+        </td>
+        <td><a class="btn btn-primary" href="#">Remove</a></td>
+      </tr>
+    {% endfor %}
+  </table>
+  {{ render_pagination(labels) }}
+{% endblock %}

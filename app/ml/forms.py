@@ -6,7 +6,7 @@ from flask_wtf.file import FileField, FileAllowed, FileRequired
 
 
 def iteration_text(row):
-    return row.model.name + ': ' + str(row.training_date)
+    return row.model.name + ': ' + str(row.updated)
 
 class FilterForm(FlaskForm):
     model_iteration = QuerySelectField('Model:', get_label=iteration_text, validators=[Optional()], allow_blank=False)
@@ -25,4 +25,28 @@ class UploadForm(FlaskForm):
 
 
 class DeleteForm(FlaskForm):
-    delete_button = SubmitField('Delete')
+    delete_button = SubmitField('Remove')
+
+
+class PreviousForm(FlaskForm):
+    previous_button = SubmitField('Previous')
+
+
+class NextForm(FlaskForm):
+    next_button = SubmitField('Next')
+
+
+class IterationLabelForm(FlaskForm):
+    combine_with = QuerySelectField('Combine with:', validators=[Optional()], allow_blank=True, blank_text='(None)')
+    submit_button = SubmitField('Save')
+
+
+class EditModelForm(FlaskForm):
+    name = StringField(validators=[InputRequired()])
+    description = StringField()
+    submit_button = SubmitField('Save')
+
+
+class EditIterationForm(FlaskForm):
+    notes = StringField()
+    submit_button = SubmitField('Save')

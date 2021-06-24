@@ -6,7 +6,7 @@
     {% for project in projects.items %}
         <div class="card mt-3 mb-3">
             <div class="card-body row">
-                <h5 class="card-title col-12">{{ project.name }}</h5>
+                <h5 class="card-title col-12"><a href="{{ url_for('projects.overview', project_id=project.id) }}">{{ project.name }}</a></h5>
                 <div class="col-md-2 col-sm-6 mb-3">
                     <a class="btn btn-primary" href="{{ url_for('audio.list_files', project_id=project.id) }}">Listen to full recordings</a>
                 </div>

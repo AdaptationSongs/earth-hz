@@ -30,7 +30,7 @@ def register_callbacks(dashapp):
         try:
             project_id = get_project_id(query)
             with dashapp.server.app_context():
-                results = db.session.query(MLModel.id, MLModel.name, func.max(ModelIteration.training_date).label('latest')).join(MLModel).filter(MLModel.project_id == project_id).group_by(MLModel.id).order_by(desc('latest')).all()
+                results = db.session.query(MLModel.id, MLModel.name, func.max(ModelIteration.updated).label('latest')).join(MLModel).filter(MLModel.project_id == project_id).group_by(MLModel.id).order_by(desc('latest')).all()
             options = [{'label': r.name, 'value': r.id} for r in results]
         except:
              options = []
@@ -45,8 +45,8 @@ def register_callbacks(dashapp):
     @dashapp.callback(Output('iteration-dropdown', 'options'), [Input('model-dropdown', 'value')])
     def update_iteration_options(selected_model_id):
         try:
-            results = ModelIteration.query.filter(ModelIteration.model_id == selected_model_id).order_by(ModelIteration.training_date.desc()).all() 
-            options = [{'label': r.training_date, 'value': r.id} for r in results]
+            results = ModelIteration.query.filter(ModelIteration.model_id == selected_model_id).order_by(ModelIteration.updated.desc()).all()
+            options = [{'label': r.updated, 'value': r.id} for r in results]
         except:
              options = []
         return options

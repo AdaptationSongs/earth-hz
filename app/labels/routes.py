@@ -24,7 +24,6 @@ def list_labels(project_id=None):
         view_restricted = ManageLabelsPermission(project_id)
         if not view_restricted.can():
             q = q.filter((Label.restricted == False) | (Label.restricted == None))
-            print(q)
         if project_id:
             q = q.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == project_id)
             fq = fq.join(ProjectLabel, Label.id == ProjectLabel.label_id).filter(ProjectLabel.project_id == project_id)
