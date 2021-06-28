@@ -9,7 +9,7 @@ import plotly_express as px
 import pandas as pd
 from sqlalchemy import func, extract, desc
 from app import db
-from app.models import ModelOutput, AudioFile, Equipment, MonitoringStation, Project, ProjectLabel, Label, MLModel, ModelIteration, ModelLabel
+from app.models import ModelOutput, AudioFile, Equipment, MonitoringStation, Project, ProjectLabel, Label, MLModel, ModelIteration, ModelLabel, StatusEnum
 
 
 def get_project_id(query):
@@ -45,7 +45,7 @@ def register_callbacks(dashapp):
     @dashapp.callback(Output('iteration-dropdown', 'options'), [Input('model-dropdown', 'value')])
     def update_iteration_options(selected_model_id):
         try:
-            results = ModelIteration.query.filter(ModelIteration.model_id == selected_model_id).order_by(ModelIteration.updated.desc()).all()
+            results = ModelIteration.query.filter(ModelIteration.model_id == selected_model_id).filter(ModelIteration.status == StatusEnum.finished).order_by(ModelIteration.updated.desc()).all()
             options = [{'label': r.updated, 'value': r.id} for r in results]
         except:
              options = []

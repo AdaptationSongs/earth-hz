@@ -3,7 +3,7 @@ from flask import render_template, abort, flash, redirect, url_for, request, g, 
 from flask_login import current_user, login_required
 from sqlalchemy import extract, func, and_
 from app import db
-from app.models import AudioFile, Equipment, MLModel, ModelIteration, ModelOutput, Project, ProjectLabel, Label, LabelType, ModelLabel, LabeledClip
+from app.models import AudioFile, Equipment, MLModel, ModelIteration, ModelOutput, Project, ProjectLabel, Label, LabelType, ModelLabel, LabeledClip, StatusEnum
 from app.user.permissions import ViewResultsPermission, UploadDataPermission, ManageLabelsPermission
 from app.ml import bp
 from app.ml.forms import UploadForm, IterationLabelForm, DeleteForm, PreviousForm, NextForm, EditModelForm, EditIterationForm
@@ -17,9 +17,14 @@ def list_outputs(project_id):
     permission = ViewResultsPermission(project_id)
     if permission.can():
         page = request.args.get('page', 1, type=int)
-        iq = ModelIteration.query.join(MLModel).filter(MLModel.project_id == project_id).order_by(ModelIteration.updated.desc())
         q = ModelOutput.query.join(AudioFile).join(ModelIteration).join(MLModel).filter(MLModel.project_id == project_id)
-        iteration = request.args.get('iteration', iq.first().id, type=int)
+        iq = ModelIteration.query.join(MLModel).filter(MLModel.project_id == project_id).filter(ModelIteration.status == StatusEnum.finished).order_by(ModelIteration.updated.desc())
+        latest_iteration = iq.first()
+        if latest_iteration:
+            latest_iteration_id = latest_iteration.id
+        else: 
+            latest_iteration_id = 0
+        iteration = request.args.get('iteration', latest_iteration_id, type=int)
         q = q.filter(ModelIteration.id == iteration)
         predicted_label = request.args.get('label', type=int)
         if predicted_label:
@@ -401,7 +406,7 @@ def _get_models(project_id):
 
 @bp.route('/_get_model_iterations/<model_id>')
 def _get_model_iterations(model_id):
-    q = ModelIteration.query.filter(ModelIteration.model_id == model_id)
+    q = ModelIteration.query.filter(ModelIteration.model_id == model_id).filter(ModelIteration.status == StatusEnum.finished)
     results = q.order_by(ModelIteration.updated.desc()).all()
     iterations = [{'id': r.id, 'updated': r.updated} for r in results]
     return jsonify(iterations)
