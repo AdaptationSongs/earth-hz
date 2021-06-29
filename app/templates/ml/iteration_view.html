@@ -42,7 +42,11 @@
             {% endfor %}
           </ul>
         </td>
-        <td>{{ label.combine_with }} <a href="{{ url_for('ml.edit_label', iteration_id=iteration.id, label_id=label.label.id) }}">edit</a></td>
+        <td>{{ label.combine_with }} 
+          {% if iteration.status.name == 'labeling' %}
+            <a href="{{ url_for('ml.edit_label', iteration_id=iteration.id, label_id=label.label.id) }}">edit</a>
+          {% endif %}
+        </td>
         <td>
           {% if iteration.status.name == 'labeling' %}
             {{ render_form(delete_form, action=url_for('ml.delete_label', iteration_id=iteration.id, label_id=label.label.id), button_map={'delete_button': 'danger'}) }}
