@@ -207,7 +207,7 @@ def edit_label(iteration_id, label_id):
     model = MLModel.query.get(model_id)
     project_id = model.project_id
     permission = ManageLabelsPermission(project_id)
-    if permission.can():
+    if permission.can() and iteration.status == StatusEnum.labeling:
         model_label = ModelLabel.query.filter(ModelLabel.label_id == label_id).filter(ModelLabel.iteration_id == iteration_id).first()
         if model_label:
             combine_with = model_label.combine_with
@@ -243,7 +243,7 @@ def delete_label(iteration_id, label_id):
     model = MLModel.query.get(model_id)
     project_id = model.project_id
     permission = ManageLabelsPermission(project_id)
-    if permission.can():
+    if permission.can() and iteration.status == StatusEnum.labeling:
         model_label = ModelLabel.query.filter(ModelLabel.label_id == label_id).filter(ModelLabel.iteration_id == iteration_id).first()
         label = Label.query.get(label_id)
         iteration.updated = datetime.utcnow()
