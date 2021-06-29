@@ -223,7 +223,9 @@ def edit_label(iteration_id, label_id):
             else:
                 change = 'Updated'
             model_label.combine_with = form.combine_with.data
+            iteration.updated = datetime.utcnow()
             db.session.add(model_label)
+            db.session.add(iteration)
             db.session.commit()
             flash(change + ' ' + label.name)
             return redirect(url_for('ml.view_iteration', iteration_id=iteration_id))
@@ -244,7 +246,9 @@ def delete_label(iteration_id, label_id):
     if permission.can():
         model_label = ModelLabel.query.filter(ModelLabel.label_id == label_id).filter(ModelLabel.iteration_id == iteration_id).first()
         label = Label.query.get(label_id)
+        iteration.updated = datetime.utcnow()
         db.session.delete(model_label)
+        db.session.add(iteration)
         db.session.commit()
         flash('Removed ' + label.name)
         return redirect(url_for('ml.view_iteration', iteration_id=iteration_id))
@@ -264,6 +268,7 @@ def previous_status(iteration_id):
         previous_status = iteration.previous_status()
         if next_status:
             iteration.status = previous_status
+            iteration.updated = datetime.utcnow()
             db.session.add(iteration)
             db.session.commit()
             flash('Updated status')
@@ -286,6 +291,7 @@ def next_status(iteration_id):
         next_status = iteration.next_status()
         if next_status:
             iteration.status = next_status
+            iteration.updated = datetime.utcnow()
             db.session.add(iteration)
             db.session.commit()
             flash('Updated status')
@@ -308,6 +314,7 @@ def edit_iteration(iteration_id):
         form = EditIterationForm()
         if form.validate_on_submit():
             iteration.description = form.notes.data
+            iteration.updated = datetime.utcnow()
             db.session.add(iteration)
             db.session.commit()
             flash('Notes updated')
