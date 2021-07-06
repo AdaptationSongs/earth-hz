@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% from 'bootstrap/pagination.html' import render_pagination %}
+
+{% block app_content %}
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=project.id) }}">{{ project.name }}</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_models', project_id=project.id) }}">Machine Learning Models</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_iterations', model_id=model.id) }}">{{ model.name }}</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('ml.view_iteration', iteration_id=iteration.id) }}">{{ iteration.updated }}</a></li>
+      <li class="breadcrumb-item active">Training Errors</li>
+    </ol>
+  </nav>
+  <h3>Errors for {{ model_label.label }}</h3>
+  <table class="table">
+    <th>Clip that confused model</th>
+    <th>Came out as</th>
+    <th>Common names</th>
+    {% for error in errors.items %}
+      <tr>
+	      <td><a href="{{ url_for('labels.view_clip', file_name=error.file_name, offset=error.offset) }}">{{ error.file_name }}: {{ error.offset }} secs</a></td>
+        <td>{{ error.came_out.name }}</td>
+        <td>
+          <ul>
+            {% for common_name in error.came_out.common_names %}
+              <li>{{ common_name.name }} ({{ common_name.language.name }})</li>
+            {% endfor %}
+          </ul>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+  {{ render_pagination(errors) }}
+{% endblock %}

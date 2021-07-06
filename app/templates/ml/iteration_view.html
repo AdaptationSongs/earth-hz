@@ -15,6 +15,9 @@
   <p>{{ iteration.description }} <a href="{{ url_for('ml.edit_iteration', iteration_id=iteration.id) }}">edit</a></p>
   <p><a href="{{ url_for('ml.copy_iteration', iteration_id=iteration.id) }}">New iteration based on this one</a></p>
   <h3>Current Status: {{ iteration.status }}</h3>
+  {% if iteration.accuracy %}
+    <h4>Accuracy: {{ iteration.accuracy }}%</h4>
+  {% endif %}
   {% if previous_form %}
     {{ render_form(previous_form, action = url_for('ml.previous_status', iteration_id=iteration.id), extra_classes='d-inline-block') }}
   {% endif %}
@@ -30,6 +33,7 @@
     <th>Clips</th>
     <th>Common names</th>
     <th>Combine with</th>
+    <th>Training errors</th>
     <th>Actions</th>
     {% for label in labels.items %}
       <tr>
@@ -47,6 +51,7 @@
             <a href="{{ url_for('ml.edit_label', iteration_id=iteration.id, label_id=label.label.id) }}">edit</a>
           {% endif %}
         </td>
+	<td><a href="{{ url_for('ml.view_errors', model_label_id=label.id) }}">{{ label.training_errors.count() }}</a></td>
         <td>
           {% if iteration.status.name == 'labeling' %}
             {{ render_form(delete_form, action=url_for('ml.delete_label', iteration_id=iteration.id, label_id=label.label.id), button_map={'delete_button': 'danger'}) }}

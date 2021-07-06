@@ -305,6 +305,7 @@ class ModelLabel(db.Model):
     combine_with_id = db.Column(db.Integer, db.ForeignKey(Label.id))
     combine_with = db.relationship('Label', foreign_keys=[combine_with_id])
     project_label = db.relationship('ProjectLabel', secondary='join(Project, MLModel).join(ModelIteration)', primaryjoin='and_(ProjectLabel.label_id == ModelLabel.label_id, ModelIteration.id == ModelLabel.iteration_id)', uselist=False, viewonly=True)
+    training_errors = db.relationship('TrainingError', primaryjoin='and_(foreign(ModelLabel.iteration_id) == TrainingError.iteration_id, foreign(ModelLabel.label_id) == TrainingError.should_be_id)', uselist=True, viewonly=True, lazy='dynamic')
 
 
 class ModelOutput(db.Model):

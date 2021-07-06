@@ -15,6 +15,10 @@ class ClusterGroupView(MyModelView):
     form_excluded_columns = ('clusters')
 
 
+class ModelIterationView(MyModelView):
+    form_excluded_columns='training_errors'
+
+
 admin.add_link(MenuLink(name='Main Site', category='', url='/'))
 
 admin.add_view(MyModelView(User, db.session))
@@ -30,6 +34,6 @@ admin.add_view(MyModelView(Language, db.session))
 admin.add_view(MyModelView(CommonName, db.session))
 admin.add_view(MyModelView(ProjectLabel, db.session))
 admin.add_view(MyModelView(MLModel, db.session))
-admin.add_view(MyModelView(ModelIteration, db.session))
+admin.add_view(ModelIterationView(ModelIteration, db.session))
 admin.add_view(MyModelView(ModelLabel, db.session))
 

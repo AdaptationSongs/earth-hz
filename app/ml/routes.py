@@ -180,6 +180,21 @@ def view_iteration(iteration_id):
     abort(403)
 
 
+@bp.route('/training_errors/<model_label_id>')
+@login_required
+def view_errors(model_label_id):
+    model_label = ModelLabel.query.get(model_label_id)
+    iteration = model_label.iteration
+    model = iteration.model
+    project_id = model.project_id
+    permission = ManageLabelsPermission(project_id)
+    if permission.can():
+        page = request.args.get('page', 1, type=int)
+        errors = model_label.training_errors.paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
+        project = Project.query.get(project_id)
+        return render_template('ml/training_errors.html', title='Training Errors', errors=errors, model_label=model_label, iteration=iteration, model=model, project=project)
+
+
 @bp.route('/iteration/<iteration_id>/add_label')
 @login_required
 def add_label(iteration_id):
