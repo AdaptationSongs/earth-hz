@@ -274,6 +274,8 @@ class ModelIteration(db.Model):
     updated = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     description = db.Column(db.String(255))
     status = db.Column(db.Enum(StatusEnum), default=StatusEnum.labeling)
+    accuracy = db.Column(db.Float)
+    training_errors = db.relationship('TrainingError', back_populates='iteration', lazy='dynamic')
 
     def __repr__(self):
         return self.model.name + ': ' + str(self.updated)
@@ -302,9 +304,7 @@ class ModelLabel(db.Model):
     label = db.relationship('Label', foreign_keys=[label_id])
     combine_with_id = db.Column(db.Integer, db.ForeignKey(Label.id))
     combine_with = db.relationship('Label', foreign_keys=[combine_with_id])
-
-    def project_label(self):
-        return ProjectLabel.query.filter(ProjectLabel.project_id == self.iteration.model.project_id).filter(ProjectLabel.label_id == self.label_id).first()
+    project_label = db.relationship('ProjectLabel', secondary='join(Project, MLModel).join(ModelIteration)', primaryjoin='and_(ProjectLabel.label_id == ModelLabel.label_id, ModelIteration.id == ModelLabel.iteration_id)', uselist=False, viewonly=True)
 
 
 class ModelOutput(db.Model):
@@ -325,3 +325,17 @@ class ModelOutput(db.Model):
 
     def labeled_clips(self):
         return LabeledClip.query.filter_by(file_name=self.file_name, offset=self.offset).all()
+
+
+class TrainingError(db.Model):
+    __tablename__ = 'training_errors'
+    id = db.Column(db.Integer, primary_key=True)
+    iteration_id = db.Column(db.Integer, db.ForeignKey(ModelIteration.id), nullable=False)
+    iteration = db.relationship('ModelIteration', back_populates='training_errors')
+    file_name = db.Column(db.String(255), db.ForeignKey(AudioFile.name), nullable=False)
+    file = db.relationship('AudioFile')
+    offset = db.Column(db.Float, nullable=False)
+    should_be_id = db.Column(db.Integer, db.ForeignKey(Label.id), nullable=False)
+    should_be = db.relationship('Label', foreign_keys=[should_be_id])
+    came_out_id = db.Column(db.Integer, db.ForeignKey(Label.id), nullable=False)
+    came_out = db.relationship('Label', foreign_keys=[came_out_id])

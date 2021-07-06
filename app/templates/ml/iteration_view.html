@@ -34,7 +34,7 @@
     {% for label in labels.items %}
       <tr>
         <td><a href="{{ url_for('labels.list_labels', project_id=project.id, select_label=label.label.id) }}">{{ label.label.name }}</a></td>
-        <td>{{ label.project_label().clip_count }}</td>
+        <td>{{ label.project_label.clip_count }}</td>
         <td>
           <ul>
             {% for common_name in label.label.common_names %}
