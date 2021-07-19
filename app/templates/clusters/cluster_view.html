@@ -3,30 +3,54 @@
 {% from 'bootstrap/pagination.html' import render_pagination %}
 
 {% block app_content %}
-    {{ render_form(filter_form, method='get', form_type='horizontal') }}
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=group.project.id) }}">{{ group.project.name }}</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('clusters.cluster_groups', project_id=group.project.id) }}">Cluster Groups</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('clusters.list_clusters', group_id=group.id) }}">{{ group.name }}</a></li>
+      <li class="breadcrumb-item active">{{ cluster_name }}</li>
+    </ol>
+  </nav>
 
-    {% for cluster in clusters.items %}
-        <div class="card mt-3 mb-3">
-            <div class="card-body row">
-                <div class="col-md-6">
-                    <a class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ cluster.file.name }}', '{{ cluster.nearest_window() }}')">Play clip</a>
-                    <p class="card-text">Time: {{ cluster.window_start() }}</p>
-                    <p class="card-text">Recording device: {{ cluster.file.sn }}</p>
-                    <p class="card-text">Manual ID: {{ cluster.label }}</p>
-                    <p class="card-text">Labels: <ul>
-                        {% for clip in cluster.labeled_clips() %}
-                            <li>{{ clip.label.name }}{% if not clip.certain %} (maybe){% endif %}</li>
-                        {% endfor %}
-                    </ul></p>
-                    <a class="btn btn-primary" href="{{ url_for('labels.view_clip', file_name=cluster.file.name, offset=cluster.nearest_window()) }}">Label</a>
-                </div>
-                <div class="col-md-6">
-                    <img class="card-img-top" src="{{ url_for('audio.spectro', file_name=cluster.file_name, offset=cluster.nearest_window()) }}">
-                </div>
-            </div>
+  {{ render_form(filter_form, method='get', form_type='horizontal') }}
+
+  {% for clip in clips.items %}
+    <div class="card mt-3 mb-3">
+      <div class="card-body row">
+        <div class="col-md-6">
+          <a class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ clip.file.name }}', '{{ clip.nearest_window() }}')">Play clip</a>
+          <p class="card-text">Time: {{ clip.window_start() }}</p>
+          <p class="card-text">Recording device: {{ clip.file.sn }}</p>
+          <p class="card-text">Manual ID: {{ clip.label }}</p>
+          <div id="label-block-{{ loop.index }}" data-filename="{{ clip.file_name }}" data-offset="{{ clip.nearest_window() }}" data-duration="{{ config['CLIP_SECS'] }}"></div>
+          <a href="{{ url_for('labels.view_clip', file_name=clip.file.name, offset=clip.nearest_window()) }}">View/Edit Clip Labels</a>
         </div>
-    {% endfor %}
+        <div class="col-md-6">
+          <img class="card-img-top" src="{{ url_for('audio.spectro', file_name=clip.file_name, offset=clip.nearest_window()) }}">
+        </div>
+      </div>
+    </div>
+  {% endfor %}
 
-    {{ render_pagination(clusters) }}
+  {{ render_pagination(clips) }}
 {% endblock %}
 
+{% block scripts %}
+  {{super()}}
+  <script src="{{ url_for('labels.static', filename='dist/labels.js') }}"></script>
+  <script>
+    for (i = 1; i <= {{ clips.items | length }}; i++) {
+      const block = document.getElementById('label-block-' + i);
+      const props = {
+        project_id: {{ group.project.id }},
+        file_name: block.getAttribute('data-filename'),
+        offset: block.getAttribute('data-offset'),
+        duration: block.getAttribute('data-duration')
+      };
+      ReactDOM.render(
+        React.createElement(labels.LabelContainer, props, null),
+        block
+      );
+    }
+  </script>
+{% endblock %}

@@ -10,27 +10,25 @@ from app.clusters.forms import UploadForm
 import pandas as pd
 
 
-@bp.route('/clusters')
 @bp.route('/clusters/project/<project_id>')
 @login_required
-def cluster_groups(project_id=None):
+def cluster_groups(project_id):
     permission = ViewResultsPermission(project_id)
     if permission.can():
         delete_form = DeleteForm()
         page = request.args.get('page', 1, type=int)
-        q = ClusterGroup.query
-        if project_id:
-           q = q.join(Project).filter(Project.id == project_id)
+        q = ClusterGroup.query.filter(ClusterGroup.project_id == project_id)
         groups = q.order_by(ClusterGroup.name).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-        return render_template('clusters/cluster_groups.html', title='All cluster groups', groups=groups, project_id=project_id, delete_form=delete_form)
+        project = Project.query.get(project_id)
+        return render_template('clusters/cluster_groups.html', title='All cluster groups', groups=groups, project=project, delete_form=delete_form)
     # permission denied
     abort(403)
 
 @bp.route('/clusters/<group_id>')
 @login_required
 def list_clusters(group_id):
-    project_id = ClusterGroup.query.get(group_id).project_id
-    permission = ViewResultsPermission(project_id)
+    group = ClusterGroup.query.get(group_id)
+    permission = ViewResultsPermission(group.project_id)
     if permission.can():
         page = request.args.get('page', 1, type=int)
         filter_form = FilterForm(request.args, csrf_enabled=False)
@@ -40,7 +38,7 @@ def list_clusters(group_id):
             if filter_form.select_label.data:
                 q = q.filter(Cluster.label == filter_form.select_label.data.label)
         clusters = q.distinct(Cluster.cluster_name).order_by(Cluster.cluster_name).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-        return render_template('clusters/cluster_list.html', title='Sound clusters in group', clusters=clusters, filter_form=filter_form)
+        return render_template('clusters/cluster_list.html', title='Sound clusters in group', clusters=clusters, group=group, filter_form=filter_form)
     # permission denied
     abort(403)
 
@@ -48,8 +46,8 @@ def list_clusters(group_id):
 @bp.route('/clusters/<group_id>/<cluster_name>')
 @login_required
 def view_cluster(group_id, cluster_name):
-    project_id = ClusterGroup.query.get(group_id).project_id
-    permission = ViewResultsPermission(project_id)
+    group = ClusterGroup.query.get(group_id)
+    permission = ViewResultsPermission(group.project_id)
     if permission.can():
         page = request.args.get('page', 1, type=int)
         filter_form = FilterForm(request.args)
@@ -58,8 +56,8 @@ def view_cluster(group_id, cluster_name):
         if filter_form.validate():
             if filter_form.select_label.data:
                 q = q.filter(Cluster.label == filter_form.select_label.data.label)
-        clusters = q.join(AudioFile).order_by(AudioFile.timestamp).order_by(Cluster.start).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-        return render_template('clusters/cluster_view.html', title='Selections in sound cluster', clusters=clusters, filter_form=filter_form)
+        clips = q.join(AudioFile).order_by(AudioFile.timestamp).order_by(Cluster.start).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
+        return render_template('clusters/cluster_view.html', title='Selections in sound cluster', clips=clips, group=group, cluster_name=cluster_name, filter_form=filter_form)
     # permission denied
     abort(403)
 
@@ -91,10 +89,8 @@ def upload(project_id):
 @login_required
 def delete_clusters(group_id):
     group = ClusterGroup.query.get(group_id)
-    project_id = group.project_id
-    permission = UploadDataPermission(project_id)
+    permission = UploadDataPermission(group.project_id)
     if permission.can() or (group.user == current_user):
-        group = ClusterGroup.query.get(group_id)
         db.session.delete(group)
         db.session.commit()
         flash('Cluster group deleted.')

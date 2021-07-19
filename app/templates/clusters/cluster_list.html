@@ -3,6 +3,14 @@
 {% from 'bootstrap/pagination.html' import render_pagination %}
 
 {% block app_content %}
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=group.project.id) }}">{{ group.project.name }}</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('clusters.cluster_groups', project_id=group.project.id) }}">Cluster Groups</a></li>
+      <li class="breadcrumb-item active">{{ group.name }}</li>
+    </ol>
+  </nav>
+
     {{ render_form(filter_form, method='get', form_type='horizontal') }}
 
     {% for cluster in clusters.items %}

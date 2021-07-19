@@ -34,15 +34,6 @@
 
 {% block scripts %}
     {{super()}}
-    {% if config.DEBUG %}
-        <script src="https://unpkg.com/react/umd/react.development.js" crossorigin></script>
-        <script src="https://unpkg.com/react-dom/umd/react-dom.development.js" crossorigin></script>
-        <script src="https://unpkg.com/react-bootstrap@next/dist/react-bootstrap.js" crossorigin></script>
-    {% else %}
-        <script src="https://unpkg.com/react/umd/react.production.min.js" crossorigin></script>
-        <script src="https://unpkg.com/react-dom/umd/react-dom.production.min.js" crossorigin></script>
-        <script src="https://unpkg.com/react-bootstrap@next/dist/react-bootstrap.min.js" crossorigin></script>
-    {% endif %}
     <script src="{{ url_for('ml.static', filename='dist/filter-form.js') }}"></script>
     <script src="{{ url_for('labels.static', filename='dist/labels.js') }}"></script>
     <script>

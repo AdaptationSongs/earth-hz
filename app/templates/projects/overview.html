@@ -5,6 +5,23 @@
   <h2>{{ project.name }}</h2>
   <p>{{ project.description }}</p>
   <div class="row">
+    <div class="col-md-2 col-sm-6 mb-3">
+      <a class="btn btn-primary" href="{{ url_for('audio.list_files', project_id=project.id) }}">Listen to full recordings</a>
+    </div>
+    <div class="col-md-2 col-sm-6 mb-3">
+      <a class="btn btn-primary" href="{{ url_for('clusters.cluster_groups', project_id=project.id) }}">Browse sound clusters</a>
+    </div>
+    <div class="col-md-2 col-sm-6 mb-3">
+      <a class="btn btn-primary" href="{{ url_for('labels.list_labels', project_id=project.id) }}">View labels</a>
+    </div>
+    <div class="col-md-2 col-sm-6 mb-3">
+      <a class="btn btn-primary" href="{{ url_for('ml.list_outputs', project_id=project.id) }}">Verify outputs</a>
+    </div>
+    <div class="col-md-2 col-sm-6 mb-3">
+      <a class="btn btn-primary" href="{{ url_for('results_dash.dashboard', project_id=project.id) }}">Visualize results</a>
+    </div>
+  </div>
+  <div class="row">
     <div class="col">
       <h3>Top Labels</h3>
       <ul>
