@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "parcel build app/ml/static/src/*.jsx --out-dir app/ml/static/dist --public-url . --global ml && parcel build app/labels/static/src/*.jsx --out-dir app/labels/static/dist --public-url . --global labels"
+    "build": "parcel build app/static/src/*.jsx --out-dir app/static/dist --public-url ."
   },
   "repository": {
     "type": "git",

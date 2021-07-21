@@ -37,7 +37,6 @@
 
 {% block scripts %}
   {{super()}}
-  <script src="{{ url_for('labels.static', filename='dist/labels.js') }}"></script>
   <script>
     for (i = 1; i <= {{ clips.items | length }}; i++) {
       const block = document.getElementById('label-block-' + i);
@@ -48,7 +47,7 @@
         duration: block.getAttribute('data-duration')
       };
       ReactDOM.render(
-        React.createElement(labels.LabelContainer, props, null),
+        React.createElement(LabelContainer, props, null),
         block
       );
     }
