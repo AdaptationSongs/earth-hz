@@ -1,5 +1,5 @@
 from app import ma
-from app.models import User, Language, CommonName, Label, LabelType, ProjectLabel, LabeledClip
+from app.models import User, Language, CommonName, Label, LabelType, ProjectLabel, LabeledClip, MonitoringStation, Equipment, AudioFile, Cluster
 
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
@@ -41,6 +41,7 @@ class LabelSchema(ma.SQLAlchemyAutoSchema):
     common_names = ma.Nested(CommonNameSchema, many=True)
     type = ma.Nested(LabelTypeSchema)
 
+
 class ProjectLabelSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = ProjectLabel
@@ -48,6 +49,7 @@ class ProjectLabelSchema(ma.SQLAlchemyAutoSchema):
         include_fk = True
 
     label = ma.Nested(LabelSchema)
+
 
 class LabeledClipSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -58,3 +60,39 @@ class LabeledClipSchema(ma.SQLAlchemyAutoSchema):
     label = ma.Nested(LabelSchema)
     sub_label = ma.Nested(LabelSchema)
     user = ma.Nested(UserSchema, only=('name',))
+
+
+class MonitoringStationSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = MonitoringStation
+        load_instance = True
+        include_fk = True
+
+
+class EquipmentSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Equipment
+        load_instance = True
+        include_fk = True
+
+    station = ma.Nested(MonitoringStationSchema)
+
+
+class AudioFileSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = AudioFile
+        load_instance = True
+        include_fk = True
+
+    recording_device = ma.Nested(EquipmentSchema)
+
+
+class ClusterSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Cluster
+        load_instance = True
+        include_fk = True
+
+    window_start = ma.Function(lambda obj: obj.window_start())
+    offset = ma.Function(lambda obj: obj.nearest_window())
+    file = ma.Nested(AudioFileSchema)

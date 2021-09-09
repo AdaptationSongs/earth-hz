@@ -68,7 +68,7 @@ class LabelList extends React.Component {
 }
 
 
-class AddLabelForm extends React.Component {
+export class AddLabelForm extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -166,13 +166,13 @@ class AddLabelForm extends React.Component {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        file_name: this.props.file_name,
-        offset: this.props.offset,
-        duration: this.props.duration,
-        certain: this.state.certain,
-        label_id: this.state.selected_label,
-        sub_label_id: this.state.selected_sub_label,
-        notes: this.state.notes
+        clips: this.props.clips,
+        label: {
+          certain: this.state.certain,
+          label_id: this.state.selected_label,
+          sub_label_id: this.state.selected_sub_label,
+          notes: this.state.notes
+        }
       })
     }).then((response) => {
       if (response.ok) {
@@ -310,11 +310,57 @@ class AddLabelForm extends React.Component {
 }
 
 
+export class LabelWidget extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      open: false
+    };
+  }
+
+  expand() {
+    this.setState({open: true});
+  }
+
+  collapse() {
+    this.setState({open: false});
+  }
+
+  render() {
+    const { open } = this.state;
+    return (
+      <div>
+        <div>Manual labels:</div>
+        <LabelList
+          labels={this.props.labels}
+        />
+        <Button variant='primary'
+          className={open ? 'd-none' : null}
+          onClick={this.expand.bind(this)}
+        >
+          + Add Label
+        </Button>
+        <Collapse mountOnEnter={true} in={open}>
+          <div>
+            <AddLabelForm
+              project_id={this.props.project_id}
+              clips={[{file_name: this.props.file_name, offset: this.props.offset, duration: this.props.duration}]}
+              onClose={this.collapse.bind(this)}
+              onAdd={this.props.onAdd.bind(this)}
+            />
+          </div>
+        </Collapse>
+      </div>
+    );
+  }
+
+}
+
+
 export class LabelContainer extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      open: false,
       labels: []
     };
   }
@@ -338,40 +384,17 @@ export class LabelContainer extends React.Component {
     }));
   }
 
-  expand() {
-    this.setState({open: true});
-  }
-
-  collapse() {
-    this.setState({open: false});
-  }
-
   render() {
-    const { open } = this.state;
     return (
       <div>
-        <div>Manual labels:</div>
-        <LabelList
+        <LabelWidget
           labels={this.state.labels}
+          project_id={this.props.project_id}
+          file_name={this.props.file_name}
+          offset={this.props.offset}
+          duration={this.props.duration}
+          onAdd={this.labelAdded.bind(this)}
         />
-        <Button variant='primary'
-          className={open ? 'd-none' : null}
-          onClick={this.expand.bind(this)}
-        >
-          + Add Label
-        </Button>
-        <Collapse mountOnEnter={true} in={open}>
-          <div>
-            <AddLabelForm
-              project_id={this.props.project_id}
-              file_name={this.props.file_name}
-              offset={this.props.offset}
-              duration={this.props.duration}
-              onClose={this.collapse.bind(this)}
-              onAdd={this.labelAdded.bind(this)}
-            />
-          </div>
-        </Collapse>
       </div>
     );
   }

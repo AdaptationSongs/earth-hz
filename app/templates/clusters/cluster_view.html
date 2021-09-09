@@ -14,23 +14,7 @@
 
   {{ render_form(filter_form, method='get', form_type='horizontal') }}
 
-  {% for clip in clips.items %}
-    <div class="card mt-3 mb-3">
-      <div class="card-body row">
-        <div class="col-md-6">
-          <a class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ clip.file.name }}', '{{ clip.nearest_window() }}')">Play clip</a>
-          <p class="card-text">Time: {{ clip.window_start() }}</p>
-          <p class="card-text">Recording device: {{ clip.file.sn }}</p>
-          <p class="card-text">Manual ID: {{ clip.label }}</p>
-          <div id="label-block-{{ loop.index }}" data-filename="{{ clip.file_name }}" data-offset="{{ clip.nearest_window() }}" data-duration="{{ config['CLIP_SECS'] }}"></div>
-          <a href="{{ url_for('labels.view_clip', file_name=clip.file.name, offset=clip.nearest_window()) }}">View/Edit Clip Labels</a>
-        </div>
-        <div class="col-md-6">
-          <img class="card-img-top" src="{{ url_for('audio.spectro', file_name=clip.file_name, offset=clip.nearest_window()) }}">
-        </div>
-      </div>
-    </div>
-  {% endfor %}
+  <div id="clips-list"></div>
 
   {{ render_pagination(clips) }}
 {% endblock %}
@@ -38,18 +22,15 @@
 {% block scripts %}
   {{super()}}
   <script>
-    for (i = 1; i <= {{ clips.items | length }}; i++) {
-      const block = document.getElementById('label-block-' + i);
-      const props = {
-        project_id: {{ group.project.id }},
-        file_name: block.getAttribute('data-filename'),
-        offset: block.getAttribute('data-offset'),
-        duration: block.getAttribute('data-duration')
-      };
-      ReactDOM.render(
-        React.createElement(LabelContainer, props, null),
-        block
-      );
-    }
+    const list_block = document.getElementById('clips-list');
+    const list_props = {
+      project_id: {{ group.project.id }},
+      duration: {{ config['CLIP_SECS'] }},
+      clips: JSON.parse('{{ cluster_json|tojson|safe }}')
+    };
+    ReactDOM.render(
+      React.createElement(EarthHz.ClusteredClips, list_props, null),
+      list_block
+    );
   </script>
 {% endblock %}

@@ -50,6 +50,7 @@ def export_csv(project_id):
 
 
 @bp.route('/clip/<file_name>/<float:offset>', methods=['GET', 'POST'])
+@bp.route('/clip/<file_name>/<int:offset>', methods=['GET', 'POST'])
 @login_required
 def view_clip(file_name, offset):
     delete_form = DeleteForm()
@@ -137,20 +138,23 @@ def _get_clip_labels(file_name):
 @bp.route('/_add_clip_label', methods=['POST'])
 def _add_clip_label():
     data = request.get_json()
-    audio_file = AudioFile.query.filter(AudioFile.name == data['file_name']).first()
-    project_id = audio_file.recording_device.station.project_id
-    permission = AddLabelPermission(project_id)
-    if permission.can():
-        q = LabeledClip.query.filter(LabeledClip.file_name == data['file_name'], LabeledClip.offset == data['offset'], LabeledClip.duration == data['duration'], LabeledClip.label_id == data['label_id'], LabeledClip.user_id == current_user.id)
-        if data['sub_label_id']:
-            q = q.filter(LabeledClip.sub_label_id == data['sub_label_id'])
-        existing_label = q.first()
-        if existing_label:
-            return jsonify({'message': 'You have already added this label'}), 409
-        data['user_id'] = current_user.id
-        labeled_clip_schema = LabeledClipSchema()
-        new_label = labeled_clip_schema.load(data)
-        db.session.add(new_label)
-        db.session.commit()
-        return labeled_clip_schema.jsonify(new_label)
-    return jsonify({'message': 'Permission denied'}), 403
+    for clip in data['clips']:
+        audio_file = AudioFile.query.filter(AudioFile.name == clip['file_name']).first()
+        project_id = audio_file.recording_device.station.project_id
+        permission = AddLabelPermission(project_id)
+        if permission.can():
+            clip.update(data['label'])
+            clip['user_id'] = current_user.id
+            q = LabeledClip.query.filter(LabeledClip.file_name == clip['file_name'], LabeledClip.offset == clip['offset'], LabeledClip.duration == clip['duration'], LabeledClip.label_id == clip['label_id'], LabeledClip.user_id == clip['user_id'])
+            if clip['sub_label_id']:
+                q = q.filter(LabeledClip.sub_label_id == clip['sub_label_id'])
+            existing_label = q.first()
+            if existing_label:
+                return jsonify({'message': 'You have already added this label'}), 409
+            labeled_clip_schema = LabeledClipSchema()
+            new_label = labeled_clip_schema.load(clip)
+            db.session.add(new_label)
+        else:
+            return jsonify({'message': 'Permission denied'}), 403
+    db.session.commit()
+    return labeled_clip_schema.jsonify(new_label)

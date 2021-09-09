@@ -3,6 +3,7 @@ from flask import render_template, abort, flash, redirect, url_for, request, g, 
 from flask_login import current_user, login_required
 from app import db
 from app.models import User, AudioFile, Cluster, ClusterGroup, Project
+from app.schema import ClusterSchema
 from app.user.permissions import ViewResultsPermission, UploadDataPermission
 from app.clusters import bp
 from app.clusters.forms import FilterForm, DeleteForm
@@ -57,7 +58,9 @@ def view_cluster(group_id, cluster_name):
             if filter_form.select_label.data:
                 q = q.filter(Cluster.label == filter_form.select_label.data.label)
         clips = q.join(AudioFile).order_by(AudioFile.timestamp).order_by(Cluster.start).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-        return render_template('clusters/cluster_view.html', title='Selections in sound cluster', clips=clips, group=group, cluster_name=cluster_name, filter_form=filter_form)
+        cluster_schema = ClusterSchema(many=True)
+        cluster_json = cluster_schema.dump(clips.items)
+        return render_template('clusters/cluster_view.html', title='Selections in sound cluster', clips=clips, cluster_json=cluster_json, group=group, cluster_name=cluster_name, filter_form=filter_form)
     # permission denied
     abort(403)
 

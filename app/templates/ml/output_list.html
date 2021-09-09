@@ -36,7 +36,7 @@
     {{super()}}
     <script>
       ReactDOM.render(
-        React.createElement(FilterForm, {project_id: {{ project_id }}}, null),
+        React.createElement(EarthHz.FilterForm, {project_id: {{ project_id }}}, null),
         document.getElementById('filter-form')
       );
       for (i = 1; i <= {{ predictions.items | length }}; i++) {
@@ -48,7 +48,7 @@
           duration: block.getAttribute('data-duration')
         };
         ReactDOM.render(
-          React.createElement(LabelContainer, props, null),
+          React.createElement(EarthHz.LabelContainer, props, null),
           block
         );
       }

@@ -1,5 +1,3 @@
-import {FilterForm} from  "../../ml/static/src/filter-form.jsx";
-import {LabelContainer} from "../../labels/static/src/labels.jsx";
-
-window.FilterForm = FilterForm;
-window.LabelContainer = LabelContainer;
+export * from '../../ml/static/src/filter-form.jsx';
+export * from '../../labels/static/src/labels.jsx';
+export * from '../../clusters/static/src/cluster_view.jsx';
