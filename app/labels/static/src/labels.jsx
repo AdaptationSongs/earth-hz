@@ -10,7 +10,7 @@ import Popover from 'react-bootstrap/Popover';
 import Form from 'react-bootstrap/Form';
 
 
-function translate_label(label, lang) {
+export function translate_label(label, lang) {
   const filtered_names = label.common_names.filter((row) => row.language.code == lang);
   if (filtered_names.length) {
     return ('(' + filtered_names[0].name + ')');
@@ -79,11 +79,11 @@ export class AddLabelForm extends React.Component {
       sub_types: [],
       sub_labels: [],
       certain: 1,
-      selected_type: null,
-      selected_label: null,
-      selected_sub_type: null,
-      selected_sub_label: null,
-      notes: null,
+      selected_type: '',
+      selected_label: '',
+      selected_sub_type: '',
+      selected_sub_label: '',
+      notes: '',
       error_code: '',
       error_message: ''
     };
@@ -170,7 +170,7 @@ export class AddLabelForm extends React.Component {
         label: {
           certain: this.state.certain,
           label_id: this.state.selected_label,
-          sub_label_id: this.state.selected_sub_label,
+          sub_label_id: (this.state.selected_sub_label || null),
           notes: this.state.notes
         }
       })
@@ -234,73 +234,72 @@ export class AddLabelForm extends React.Component {
     return (
       <Card>
         <Card.Body>
-          <Card.Title>New Label</Card.Title>
-          <Form onSubmit={this.handleSubmit.bind(this)}>
-            <Form.Group as={Row}>
+          <Card.Title>Add Label</Card.Title>
+          <Form.Group as={Row}>
+            <Form.Control
+              as="select"
+              value={certain}
+              onChange={this.handleCertaintyChange.bind(this)}
+            >
+              <option value={1}>Definitely</option>
+              <option value={0}>Maybe</option>
+            </Form.Control>
+          </Form.Group>
+          <Form.Group as={Row}>
+            <Col>
               <Form.Control
                 as="select"
-                value={certain}
-                onChange={this.handleCertaintyChange.bind(this)}
+                value={selected_type}
+                onChange={this.handleTypeChange.bind(this)}
               >
-                <option value={1}>Definitely</option>
-                <option value={0}>Maybe</option>
+                {primary_types.map((type) =>
+                  <option key={type.id} value={type.id}>{type.name}</option>
+                )}
               </Form.Control>
-            </Form.Group>
-            <Form.Group as={Row}>
-              <Col>
-                <Form.Control
-                  as="select"
-                  value={selected_type}
-                  onChange={this.handleTypeChange.bind(this)}
-                >
-                  {primary_types.map((type) =>
-                    <option key={type.id} value={type.id}>{type.name}</option>
-                  )}
-                </Form.Control>
-              </Col>
-              <Col>
-                <Form.Control
-                  as="select"
-                  value={selected_label}
-                  onChange={this.handleLabelChange.bind(this)}
-                >
-                  {primary_labels.map((label) =>
-                    <option key={label.label.id} value={label.label.id}>
-                      {label.label.name} {translate_label(label.label, 'en')}
-                    </option>
-                  )}
-                </Form.Control>
-              </Col>
-            </Form.Group>
-            {sub_label_select}
-            <Form.Group as={Row}>
-              <Form.Label>Notes:</Form.Label>
+            </Col>
+            <Col>
               <Form.Control
-                as="textarea"
-                value={notes}
-                onChange={this.handleNotesChange.bind(this)}
-              />
-            </Form.Group>
-            <Row>
-              <Col>
-                <Button
-                  variant="secondary"
-                  onClick={this.handleCancelClick.bind(this)}
-                >
-                  Cancel
-                </Button>
-              </Col>
-              <Col>
-                <Button
-                  variant="primary"
-                  className="float-right"
-                  onClick={this.handleSubmit.bind(this)}
-                >
-                  Save
-                </Button>
-              </Col>
-            </Row>
-          </Form>
+                as="select"
+                value={selected_label}
+                onChange={this.handleLabelChange.bind(this)}
+              >
+                {primary_labels.map((label) =>
+                  <option key={label.label.id} value={label.label.id}>
+                    {label.label.name} {translate_label(label.label, 'en')}
+                  </option>
+                )}
+              </Form.Control>
+            </Col>
+          </Form.Group>
+          {sub_label_select}
+          <Form.Group as={Row}>
+            <Form.Label>Notes:</Form.Label>
+            <Form.Control
+              as="textarea"
+              value={notes}
+              onChange={this.handleNotesChange.bind(this)}
+            />
+          </Form.Group>
+          <Row>
+            <Col>
+              <Button
+                variant="secondary"
+                onClick={this.handleCancelClick.bind(this)}
+              >
+                Cancel
+              </Button>
+            </Col>
+            <Col>
+              <Button
+                variant="primary"
+                className="float-right"
+                disabled={this.props.disabled}
+                onClick={this.handleSubmit.bind(this)}
+              >
+                Save
+              </Button>
+            </Col>
+          </Row>
           <div className="text-danger">{error_text}</div>
         </Card.Body>
       </Card>
@@ -329,7 +328,7 @@ export class LabelWidget extends React.Component {
   render() {
     const { open } = this.state;
     return (
-      <div>
+      <div className="mt-1">
         <div>Manual labels:</div>
         <LabelList
           labels={this.props.labels}
@@ -396,6 +395,183 @@ export class LabelContainer extends React.Component {
           onAdd={this.labelAdded.bind(this)}
         />
       </div>
+    );
+  }
+
+}
+
+
+class ClipContainer extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  handleCheckToggle(e) {
+    this.props.onCheckToggle(this.props.number, e.target.checked);
+  }
+
+  handleAddLabel(label) {
+    this.props.onAdd(label, this.props.number);
+  }
+
+  render() {
+    const clip = this.props.clip
+    return (
+      <Card body className={"mt-3 mb-3" + (this.props.selected ? " border-primary" : "")}>
+        <Row>
+          <Col md={1}>
+            <Form.Check className="h-100 pb-5">
+              <Form.Check.Input className="h-100" onChange={this.handleCheckToggle.bind(this)} checked={this.props.selected} />
+            </Form.Check>
+          </Col>
+          <Col md={5}>
+            <Button variant="primary" onClick={() => playClip(clip.file_name, clip.offset)}>
+              Play clip
+            </Button>
+            {this.props.children}
+            <LabelWidget
+              file_name={clip.file_name}
+              offset={clip.offset}
+              project_id={this.props.project_id}
+              duration={this.props.duration}
+              labels={this.props.labels}
+              onAdd={this.handleAddLabel.bind(this)}
+            />
+            <a href={"/labels/clip/"+clip.file_name+"/"+clip.offset}>View/Edit Clip Labels</a>
+          </Col>
+          <Col md={6}>
+            <Card.Img variant="top" src={"/spectrogram/"+clip.file_name+"-"+clip.offset+".png"} />
+          </Col>
+        </Row>
+      </Card>
+    );
+  }
+
+}
+
+
+export class BulkLabelContainer extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      open: false,
+      selected: this.props.clips.map((clip) => false),
+      labels: this.props.clips.map((clip) => [])
+    };
+  }
+
+  componentDidMount() {
+    this.props.clips.forEach((clip, index) => {
+      fetch('/labels/_get_clip_labels/' + clip.file_name
+        + '?offset=' + clip.offset + '&duration=' + this.props.duration)
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          let labels = [...this.state.labels];
+          labels[index] = data;
+          this.setState({labels: labels});
+        }).catch((error) => {
+          console.log(error);
+        });
+    });
+  }
+
+  expand() {
+    this.setState({open: true});
+  }
+
+  collapse() {
+    this.setState({open: false});
+  }
+
+  toggleSelectAll(e) {
+    this.setState({selected: this.props.clips.map((clip) => e.target.checked)});
+  }
+
+  toggleSelectOne(key, value) {
+    let items = [...this.state.selected];
+    items[key] = value;
+    this.setState({selected: items});
+  }
+
+  labelAdded(label, index) {
+    let labels = [...this.state.labels];
+    labels[index] = [...labels[index], label];
+    this.setState({labels: labels});
+  }
+
+  bulkLabelAdded(label) {
+    this.state.selected.forEach((selected, index) => {
+      if (selected) {
+        this.labelAdded(label, index);
+      }
+    });
+  }
+
+  render() {
+    const Inner = this.props.inner;
+    const { open, labels } = this.state;
+    let selected_clips = [];
+    this.state.selected.forEach((selected, index) => {
+      if (selected) {
+        let clip = {
+          file_name: this.props.clips[index].file_name,
+          offset: this.props.clips[index].offset,
+          duration: this.props.duration
+        }
+        selected_clips.push(clip);
+      }
+    });
+    const select_all = (selected_clips.length == this.props.clips.length);
+    return (
+      <Form>
+        <Form.Check
+          id="select-all-top"
+          label="Select all"
+          checked={select_all}
+          onChange={this.toggleSelectAll.bind(this)}
+        />
+        {this.props.clips.map((clip, index) =>
+          <ClipContainer
+            key={index}
+            number={index}
+            selected={this.state.selected[index]}
+            onCheckToggle={this.toggleSelectOne.bind(this)}
+            onAdd={this.labelAdded.bind(this)}
+            clip={clip}
+            project_id={this.props.project_id}
+            duration={this.props.duration}
+            labels={labels[index]}
+          >
+            <Inner clip={clip} />
+          </ClipContainer>
+        )}
+        <Form.Check
+          id="select-all-bottom"
+          label="Select all"
+          checked={select_all}
+          onChange={this.toggleSelectAll.bind(this)}
+        />
+        <span>{selected_clips.length} selected clips: </span>
+        <Button variant='primary'
+          className={open ? 'd-none' : null}
+          onClick={this.expand.bind(this)}
+        >
+          + Bulk Label
+        </Button>
+        <Collapse mountOnEnter={true} in={open}>
+          <div>
+            <AddLabelForm
+              project_id={this.props.project_id}
+              clips={selected_clips}
+              onClose={this.collapse.bind(this)}
+              onAdd={this.bulkLabelAdded.bind(this)}
+              disabled={!(selected_clips.length)}
+            />
+          </div>
+        </Collapse>
+      </Form>
     );
   }
 

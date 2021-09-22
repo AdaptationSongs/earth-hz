@@ -1,5 +1,5 @@
 from app import ma
-from app.models import User, Language, CommonName, Label, LabelType, ProjectLabel, LabeledClip, MonitoringStation, Equipment, AudioFile, Cluster
+from app.models import User, Language, CommonName, Label, LabelType, ProjectLabel, LabeledClip, MonitoringStation, Equipment, AudioFile, Cluster, ModelOutput
 
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
@@ -96,3 +96,14 @@ class ClusterSchema(ma.SQLAlchemyAutoSchema):
     window_start = ma.Function(lambda obj: obj.window_start())
     offset = ma.Function(lambda obj: obj.nearest_window())
     file = ma.Nested(AudioFileSchema)
+
+
+class ModelOutputSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = ModelOutput
+        load_instance = True
+        include_fk = True
+
+    window_start = ma.Function(lambda obj: obj.start_time())
+    file = ma.Nested(AudioFileSchema)
+    label = ma.Nested(LabelSchema)

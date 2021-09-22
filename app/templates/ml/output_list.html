@@ -8,50 +8,36 @@
 {% endblock %}
 
 {% block app_content %}
-    <div id="filter-form"></div>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=project.id) }}">{{ project.name }}</a></li>
+      <li class="breadcrumb-item active">Machine Learning Output</li>
+    </ol>
+  </nav>
 
-    {% for prediction in predictions.items %}
-        <div class="card mt-3 mb-3">
-            <div class="card-body row">
-                <div class="col-md-6">
-                    <a class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ prediction.file.name }}', '{{ prediction.offset }}')">Play clip</a>
-                    <p class="card-text">Time: {{ prediction.start_time() }}</p>
-                    <p class="card-text">Recording device: {{ prediction.file.sn }}</p>
-                    <p class="card-text">Predicted label: {{ prediction.label }}</p>
-                    <p class="card-text">Probability: {{ prediction.probability }}</p>
-                    <div id="label-block-{{ loop.index }}" data-filename="{{ prediction.file_name }}" data-offset="{{ prediction.offset }}" data-duration="{{ prediction.duration }}"></div>
-                    <a href="{{ url_for('labels.view_clip', file_name=prediction.file_name, offset=prediction.offset) }}">View/Edit Clip Labels</a>
-                </div>
-                <div class="col-md-6">
-                    <img class="card-img-top" src="{{ url_for('audio.spectro', file_name=prediction.file_name, offset=prediction.offset) }}">
-                </div>
-            </div>
-        </div>
-    {% endfor %}
+  <div id="filter-form"></div>
 
-    {{ render_pagination(predictions) }}
+  <div id="clips-list"></div>
+
+  {{ render_pagination(predictions) }}
 {% endblock %}
 
 {% block scripts %}
-    {{super()}}
-    <script>
-      ReactDOM.render(
-        React.createElement(EarthHz.FilterForm, {project_id: {{ project_id }}}, null),
-        document.getElementById('filter-form')
-      );
-      for (i = 1; i <= {{ predictions.items | length }}; i++) {
-        const block = document.getElementById('label-block-' + i);
-        const props = {
-          project_id: {{ project_id }},
-          file_name: block.getAttribute('data-filename'),
-          offset: block.getAttribute('data-offset'),
-          duration: block.getAttribute('data-duration')
-        };
-        ReactDOM.render(
-          React.createElement(EarthHz.LabelContainer, props, null),
-          block
-        );
-      }
-    </script>
+  {{super()}}
+  <script>
+    const list_props = {
+      project_id: {{ project.id }},
+      duration: {{ config['CLIP_SECS'] }},
+      clips: JSON.parse('{{ clips_json|safe }}')
+    };
+    ReactDOM.render(
+      React.createElement(EarthHz.FilterForm, {project_id: {{ project.id }}}, null),
+      document.getElementById('filter-form')
+    );
+    ReactDOM.render(
+      React.createElement(EarthHz.ResultsClips, list_props, null),
+      document.getElementById('clips-list')
+    );
+  </script>
 {% endblock %}
 

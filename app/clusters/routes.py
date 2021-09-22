@@ -59,8 +59,8 @@ def view_cluster(group_id, cluster_name):
                 q = q.filter(Cluster.label == filter_form.select_label.data.label)
         clips = q.join(AudioFile).order_by(AudioFile.timestamp).order_by(Cluster.start).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
         cluster_schema = ClusterSchema(many=True)
-        cluster_json = cluster_schema.dump(clips.items)
-        return render_template('clusters/cluster_view.html', title='Selections in sound cluster', clips=clips, cluster_json=cluster_json, group=group, cluster_name=cluster_name, filter_form=filter_form)
+        clips_json = cluster_schema.dumps(clips.items)
+        return render_template('clusters/cluster_view.html', title='Selections in sound cluster', clips=clips, clips_json=clips_json, group=group, cluster_name=cluster_name, filter_form=filter_form)
     # permission denied
     abort(403)
 

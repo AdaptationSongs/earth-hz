@@ -4,6 +4,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import extract, func, and_
 from app import db
 from app.models import AudioFile, Equipment, MLModel, ModelIteration, ModelOutput, Project, ProjectLabel, Label, LabelType, ModelLabel, LabeledClip, StatusEnum
+from app.schema import ModelOutputSchema
 from app.user.permissions import ViewResultsPermission, UploadDataPermission, ManageLabelsPermission
 from app.ml import bp
 from app.ml.forms import UploadForm, IterationLabelForm, DeleteForm, PreviousForm, NextForm, EditModelForm, EditIterationForm
@@ -70,7 +71,10 @@ def list_outputs(project_id):
             if single == 'on':
                 q = q.distinct(ModelOutput.file_name)
         predictions = q.paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-        return render_template('ml/output_list.html', title='Machine Learning Output', predictions=predictions, project_id=project_id)
+        output_schema = ModelOutputSchema(many=True)
+        clips_json = output_schema.dumps(predictions.items)
+        project = Project.query.get(project_id)
+        return render_template('ml/output_list.html', title='Machine Learning Output', predictions=predictions, clips_json=clips_json, project=project)
     # permission denied
     abort(403)
 

@@ -22,15 +22,14 @@
 {% block scripts %}
   {{super()}}
   <script>
-    const list_block = document.getElementById('clips-list');
     const list_props = {
       project_id: {{ group.project.id }},
       duration: {{ config['CLIP_SECS'] }},
-      clips: JSON.parse('{{ cluster_json|tojson|safe }}')
+      clips: JSON.parse('{{ clips_json|safe }}')
     };
     ReactDOM.render(
       React.createElement(EarthHz.ClusteredClips, list_props, null),
-      list_block
+      document.getElementById('clips-list')
     );
   </script>
 {% endblock %}

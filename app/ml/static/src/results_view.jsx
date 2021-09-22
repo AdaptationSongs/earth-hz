@@ -1,9 +1,9 @@
 import React from 'react';
 import Card from 'react-bootstrap/Card';
-import {BulkLabelContainer} from '../../../labels/static/src/labels.jsx'
+import {BulkLabelContainer, translate_label} from '../../../labels/static/src/labels.jsx'
 
 
-class ClusteredClip extends React.Component {
+class ResultsClip extends React.Component {
   constructor(props) {
     super(props);
   }
@@ -14,7 +14,8 @@ class ClusteredClip extends React.Component {
       <div>
         <Card.Text>Time: {clip.window_start}</Card.Text>
         <Card.Text>Monitoring station: {clip.file.recording_device.station.name}</Card.Text>
-        <Card.Text>Manual ID: {clip.label}</Card.Text>
+        <Card.Text>Predicted label: {clip.label.name} {translate_label(clip.label, 'en')}</Card.Text>
+        <Card.Text>Probability: {clip.probability}</Card.Text>
       </div>
     );
   }
@@ -22,7 +23,7 @@ class ClusteredClip extends React.Component {
 }
 
 
-export class ClusteredClips extends React.Component {
+export class ResultsClips extends React.Component {
   constructor(props) {
     super(props);
   }
@@ -33,7 +34,7 @@ export class ClusteredClips extends React.Component {
         project_id={this.props.project_id}
         duration={this.props.duration}
         clips={this.props.clips}
-        inner={ClusteredClip}
+        inner={ResultsClip}
       />
     );
   }
