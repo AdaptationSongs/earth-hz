@@ -7,13 +7,30 @@ import Button from 'react-bootstrap/Button';
 import Collapse from 'react-bootstrap/Collapse';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
+import Tooltip from 'react-bootstrap/Tooltip';
 import Form from 'react-bootstrap/Form';
+import InputGroup from 'react-bootstrap/InputGroup';
+import ReactAutocomplete from 'react-autocomplete';
 
 
-export function translate_label(label, lang) {
+export function translate_label(label) {
+  // todo: get current language from browser
+  const lang = 'en'
   const filtered_names = label.common_names.filter((row) => row.language.code == lang);
   if (filtered_names.length) {
-    return ('(' + filtered_names[0].name + ')');
+    return (filtered_names[0].name);
+  } else {
+    return '';
+  }
+}
+
+
+export function format_common_name(label) {
+  const common_name = translate_label(label);
+  if (common_name) {
+    return ('(' + common_name + ')');
+  } else {
+    return '';
   }
 }
 
@@ -23,7 +40,7 @@ class LabelList extends React.Component {
     super(props);
   }
 
-  render() {
+  render() { 
     return (
       <ul>
         {this.props.labels.map((label) =>
@@ -56,7 +73,7 @@ class LabelList extends React.Component {
               }
             >
               <Button variant="link">
-                {label.label.name} {translate_label(label.label, 'en')} {label.sub_label ? label.sub_label.name : ''}
+                {label.label.name} {format_common_name(label.label)} {label.sub_label ? label.sub_label.name : ''}
               </Button>
             </OverlayTrigger>
           </li>
@@ -65,6 +82,108 @@ class LabelList extends React.Component {
     );
   }
 
+}
+
+
+class AutoCompleteLabel extends React.Component {
+  constructor(props) {
+    super();
+  }
+
+  shouldItemRender(item, value) {
+    return (
+      (item.label.name.toLowerCase().indexOf(value.toLowerCase()) > -1) ||
+      (translate_label(item.label).toLowerCase().indexOf(value.toLowerCase()) > -1)
+    );
+  }
+
+  getSuggestionValue(item) {
+    return (translate_label(item.label) || item.label.name);
+  }
+
+  renderSuggestion(item, isHighlighted) {
+    return (
+      <div
+        key={item.label.id}
+        style={{ background: isHighlighted ? 'lightgray' : 'white' }}
+        className='mb-1'
+      >
+        {item.label.name} {format_common_name(item.label)}
+      </div>
+    );
+  }
+
+  handleInput(e) {
+    this.props.onInput(e.target.value);
+    // unset selected label while typing
+    this.props.onSelect('');
+  };
+
+  handleSelection(value, item) {
+    this.props.onInput(value);
+    this.props.onSelect(item.label.id);
+  }
+
+  handleClear() {
+    this.props.onInput('');
+    this.props.onSelect('');
+  }
+
+  render() {
+    // pass through all these props to the input
+    const input_props = {
+      placeholder: 'Type the label name',
+      className: 'form-control'
+    };
+
+    const menu_style = {
+      borderRadius: '3px',
+      boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
+      background: 'rgba(255, 255, 255, 0.9)',
+      padding: '2px 0',
+      position: 'fixed',
+      overflow: 'auto',
+      maxHeight: '50%',
+      zIndex: 999
+    }
+
+    const wrapper_style = {
+      display: 'inline-block',
+      width: '100%'
+    }
+
+    const renderTooltip = (
+       <Tooltip>Clear input</Tooltip>
+    );
+
+    return (
+      <InputGroup>
+        <ReactAutocomplete
+          items={this.props.labels}
+          shouldItemRender={this.shouldItemRender.bind(this)}
+          getItemValue={this.getSuggestionValue.bind(this)}
+          renderItem={this.renderSuggestion.bind(this)}
+          value={this.props.value}
+          onChange={this.handleInput.bind(this)}
+          onSelect={this.handleSelection.bind(this)}
+          inputProps={input_props}
+          menuStyle={menu_style}
+          wrapperStyle={wrapper_style}
+        />
+        <OverlayTrigger placement="top" overlay={renderTooltip}>
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            onClick={this.handleClear.bind(this)}
+            disabled={this.props.value == ''}
+            style={{position: 'absolute', right: '0px'}}
+          >
+            x
+          </Button>
+        </OverlayTrigger>
+      </InputGroup>
+    );
+  }
 }
 
 
@@ -81,6 +200,7 @@ export class AddLabelForm extends React.Component {
       certain: 1,
       selected_type: '',
       selected_label: '',
+      label_input: '',
       selected_sub_type: '',
       selected_sub_label: '',
       notes: '',
@@ -126,7 +246,8 @@ export class AddLabelForm extends React.Component {
     this.setState({
           selected_type: type,
           primary_labels: filtered_labels,
-          selected_label: filtered_labels.length ? filtered_labels[0].label.id : '',
+          selected_label: '',
+          label_input: '',
           sub_types: filtered_types,
     });
     if (filtered_types.length) {
@@ -143,8 +264,12 @@ export class AddLabelForm extends React.Component {
     });
   }
 
-  handleLabelChange(e) {
-    this.setState({selected_label: e.target.value});
+  handleLabelInput(value) {
+    this.setState({label_input: value});
+  }
+
+  handleLabelSelect(id) {
+    this.setState({selected_label: id});
   }
 
   handleSubLabelChange(e) {
@@ -194,7 +319,7 @@ export class AddLabelForm extends React.Component {
   }
 
   render () {
-    const { primary_types, primary_labels, sub_types, sub_labels, selected_type, selected_sub_type, selected_label, selected_sub_label, certain, notes, error_code, error_message } = this.state;
+    const { primary_types, primary_labels, sub_types, sub_labels, selected_type, selected_sub_type, selected_label, label_input, selected_sub_label, certain, notes, error_code, error_message } = this.state;
     let sub_label_select;
     if (sub_types.length) {
       sub_label_select =
@@ -258,17 +383,12 @@ export class AddLabelForm extends React.Component {
               </Form.Control>
             </Col>
             <Col>
-              <Form.Control
-                as="select"
-                value={selected_label}
-                onChange={this.handleLabelChange.bind(this)}
-              >
-                {primary_labels.map((label) =>
-                  <option key={label.label.id} value={label.label.id}>
-                    {label.label.name} {translate_label(label.label, 'en')}
-                  </option>
-                )}
-              </Form.Control>
+              <AutoCompleteLabel
+                labels={primary_labels}
+                value={label_input}
+                onInput={this.handleLabelInput.bind(this)}
+                onSelect={this.handleLabelSelect.bind(this)}
+              />
             </Col>
           </Form.Group>
           {sub_label_select}
@@ -293,7 +413,7 @@ export class AddLabelForm extends React.Component {
               <Button
                 variant="primary"
                 className="float-right"
-                disabled={this.props.disabled}
+                disabled={this.props.disabled || !(selected_label)}
                 onClick={this.handleSubmit.bind(this)}
               >
                 Save
@@ -509,6 +629,10 @@ export class BulkLabelContainer extends React.Component {
     });
   }
 
+  handleSubmit(e) {
+    e.preventDefault();
+  }
+
   render() {
     const Inner = this.props.inner;
     const { open, labels } = this.state;
@@ -525,7 +649,7 @@ export class BulkLabelContainer extends React.Component {
     });
     const select_all = (selected_clips.length == this.props.clips.length);
     return (
-      <Form>
+      <Form onSubmit={this.handleSubmit}>
         <Form.Check
           id="select-all-top"
           label="Select all"
