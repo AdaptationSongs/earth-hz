@@ -3,7 +3,7 @@ from flask import render_template, abort, flash, redirect, url_for, request, g, 
 from flask_login import current_user, login_required
 from sqlalchemy import extract, func, and_
 from app import db
-from app.models import AudioFile, Equipment, MLModel, ModelIteration, ModelOutput, Project, ProjectLabel, Label, LabelType, ModelLabel, LabeledClip, StatusEnum
+from app.models import AudioFile, Equipment, MonitoringStation, MLModel, ModelIteration, ModelOutput, Project, ProjectLabel, Label, LabelType, ModelLabel, LabeledClip, StatusEnum
 from app.schema import ModelOutputSchema
 from app.user.permissions import ViewResultsPermission, UploadDataPermission, ManageLabelsPermission
 from app.ml import bp
@@ -19,7 +19,7 @@ def list_outputs(project_id):
     permission = ViewResultsPermission(project_id)
     if permission.can():
         page = request.args.get('page', 1, type=int)
-        q = ModelOutput.query.join(AudioFile).join(ModelIteration).join(MLModel).filter(MLModel.project_id == project_id)
+        q = ModelOutput.query.join(AudioFile).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).join(ModelIteration).join(MLModel).filter(MLModel.project_id == project_id)
         iq = ModelIteration.query.join(MLModel).filter(MLModel.project_id == project_id).filter(ModelIteration.status == StatusEnum.finished).order_by(ModelIteration.updated.desc())
         latest_iteration = iq.first()
         if latest_iteration:
@@ -37,7 +37,7 @@ def list_outputs(project_id):
         q = q.filter(ModelOutput.probability <= max_prob)
         station = request.args.get('station', type=int)
         if station:
-            q = q.join(Equipment, AudioFile.sn == Equipment.serial_number).filter(Equipment.station_id == station)
+            q = q.filter(Equipment.station_id == station)
         start_date = request.args.get('start_date')
         if start_date:
             q = q.filter(func.date(AudioFile.timestamp) >= start_date)
@@ -73,8 +73,8 @@ def list_outputs(project_id):
                 q = q.distinct(ModelOutput.file_name)
         csv = request.args.get('csv', type=int)
         if csv:
-          q = q.join(Label).with_entities(ModelOutput.file_name, ModelOutput.offset, ModelOutput.duration, Label.name.label('label'), ModelOutput.probability).all()
-          column_names = ['file_name', 'offset', 'duration', 'label', 'probability']
+          q = q.join(Label).with_entities(MonitoringStation.name.label('station'), AudioFile.timestamp, ModelOutput.offset, ModelOutput.duration, Label.name.label('label'), ModelOutput.probability).all()
+          column_names = ['station', 'timestamp', 'offset', 'duration', 'label', 'probability']
           return excel.make_response_from_query_sets(q, column_names, 'csv', file_name='predictions.csv') 
         predictions = q.paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
         output_schema = ModelOutputSchema(many=True)
