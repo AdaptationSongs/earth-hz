@@ -20,6 +20,8 @@
   <div id="clips-list"></div>
 
   {{ render_pagination(predictions) }}
+  <h4>Export data:</h4>
+  <p><a class="btn btn-primary" href="{{ url_for('ml.list_outputs', project_id=project.id) }}?{{ request.query_string.decode('UTF-8') }}&csv=1">Download as CSV</a></p>
 {% endblock %}
 
 {% block scripts %}

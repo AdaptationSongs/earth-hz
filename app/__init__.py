@@ -59,6 +59,10 @@ def create_app(config_class=Config):
     # custom overrides
     app.json_encoder = CustomJSONEncoder
 
+    # App is behind https proxy
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app)
+
     return app
 
 def register_blueprints(app):

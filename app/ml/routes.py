@@ -10,6 +10,7 @@ from app.ml import bp
 from app.ml.forms import UploadForm, IterationLabelForm, DeleteForm, PreviousForm, NextForm, EditModelForm, EditIterationForm
 import pandas as pd
 from datetime import datetime
+import flask_excel as excel
 
 
 @bp.route('/project/<project_id>')
@@ -70,6 +71,11 @@ def list_outputs(project_id):
             q = q.order_by(ModelOutput.file_name.desc()).order_by(ModelOutput.offset.desc())
             if single == 'on':
                 q = q.distinct(ModelOutput.file_name)
+        csv = request.args.get('csv', type=int)
+        if csv:
+          q = q.join(Label).with_entities(ModelOutput.file_name, ModelOutput.offset, ModelOutput.duration, Label.name.label('label'), ModelOutput.probability).all()
+          column_names = ['file_name', 'offset', 'duration', 'label', 'probability']
+          return excel.make_response_from_query_sets(q, column_names, 'csv', file_name='predictions.csv') 
         predictions = q.paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
         output_schema = ModelOutputSchema(many=True)
         clips_json = output_schema.dumps(predictions.items)
