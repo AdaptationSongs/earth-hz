@@ -57,11 +57,11 @@ def view_clip(file_name, offset):
     form = EditForm()
     form.select_type.query = LabelType.query.filter(LabelType.parent_id == None)
     wav_file = AudioFile.query.filter_by(name=file_name).first()
-    station = MonitoringStation.query.join(Equipment).filter(Equipment.serial_number == wav_file.sn).first()
-    lq = Label.query.join(LabelType).join(ProjectLabel, Label.id == ProjectLabel.label_id).filter(ProjectLabel.project_id == station.project_id)
+    station = wav_file.recording_device.station
+    project_id = station.project_id
+    lq = Label.query.join(LabelType).join(ProjectLabel, Label.id == ProjectLabel.label_id).filter(ProjectLabel.project_id == project_id)
     form.select_label.query = lq.filter(LabelType.parent_id == None)
     form.select_sub_label.query = lq.filter(LabelType.parent_id != None)
-    project_id = station.project_id
     add_permission = AddLabelPermission(project_id)
     view_permission = ViewResultsPermission(project_id)
     if form.validate_on_submit():
@@ -74,8 +74,9 @@ def view_clip(file_name, offset):
         # permission denied
         abort(403)
     if view_permission.can():
+        admin_permission = ManageLabelsPermission(project_id)
         labels = LabeledClip.query.filter_by(file_name=file_name, offset=offset).order_by(LabeledClip.modified.desc()).all()
-        return render_template('labels/view_clip.html',  title='Add/edit labels', delete_form=delete_form, form=form, labels=labels, wav_file=wav_file, offset=offset, station=station)
+        return render_template('labels/view_clip.html',  title='Add/edit labels', delete_form=delete_form, form=form, labels=labels, wav_file=wav_file, offset=offset, station=station, admin=admin_permission.can())
     # permission denied
     abort(403)
 
@@ -84,7 +85,9 @@ def view_clip(file_name, offset):
 @login_required
 def delete_clip_label(file_name, offset, label_id):
     clip_label = LabeledClip.query.get(label_id)
-    if (clip_label.user == current_user):
+    project_id = clip_label.file.recording_device.station.project.id
+    admin_permission = ManageLabelsPermission(project_id)
+    if clip_label.user == current_user or admin_permission.can():
         db.session.delete(clip_label)
         db.session.commit()
         flash('Label deleted.')
