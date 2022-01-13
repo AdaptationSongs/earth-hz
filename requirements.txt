@@ -47,7 +47,7 @@ marshmallow==3.9.1
 marshmallow-sqlalchemy==0.24.1
 matplotlib==3.0.3
 numba==0.47.0
-numpy==1.18.1
+numpy==1.21.0
 oauthlib==3.1.0
 pandas==0.25.3
 pandas-datareader==0.8.1
