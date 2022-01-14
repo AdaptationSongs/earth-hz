@@ -19,6 +19,7 @@ def list_outputs(project_id):
     permission = ViewResultsPermission(project_id)
     if permission.can():
         page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', type=int) or current_app.config['ITEMS_PER_PAGE']
         q = ModelOutput.query.join(AudioFile).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).join(ModelIteration).join(MLModel).filter(MLModel.project_id == project_id)
         iq = ModelIteration.query.join(MLModel).filter(MLModel.project_id == project_id).filter(ModelIteration.status == StatusEnum.finished).order_by(ModelIteration.updated.desc())
         latest_iteration = iq.first()
@@ -76,7 +77,7 @@ def list_outputs(project_id):
           q = q.join(Label).with_entities(MonitoringStation.name.label('station'), AudioFile.timestamp, ModelOutput.offset, ModelOutput.duration, Label.name.label('label'), ModelOutput.probability).all()
           column_names = ['station', 'timestamp', 'offset', 'duration', 'label', 'probability']
           return excel.make_response_from_query_sets(q, column_names, 'csv', file_name='predictions.csv') 
-        predictions = q.paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
+        predictions = q.paginate(page, per_page, False)
         output_schema = ModelOutputSchema(many=True)
         clips_json = output_schema.dumps(predictions.items)
         project = Project.query.get(project_id)

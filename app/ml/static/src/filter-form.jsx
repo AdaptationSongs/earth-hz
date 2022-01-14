@@ -358,7 +358,7 @@ class VerificationSelect extends React.Component {
   }
 
   render() {
-   return (
+    return (
       <label>
         Verification status:
         <select name="verification" onChange={this.handleChange.bind(this)} value={this.props.selected}>
@@ -382,16 +382,16 @@ class ShowSingle extends React.Component {
   }
 
   render() {
-   return (
-     <label>
-       Single result per file:
-       <input
-         name="single"
-         type="checkbox"
-         checked={this.props.checked || false}
-         onChange={this.handleChange.bind(this)}
-       />
-     </label>
+    return (
+      <label>
+        Single result per file:
+        <input
+          name="single"
+          type="checkbox"
+          checked={this.props.checked || false}
+          onChange={this.handleChange.bind(this)}
+        />
+      </label>
     );
   }
 }
@@ -407,15 +407,65 @@ class SortOptions extends React.Component {
   }
 
   render() {
-   return (
-     <label>
-       Sort by:
-       <select name="sort" onChange={this.handleChange.bind(this)} value={this.props.selected || ""}>
-         <option key='prob' value='prob'>Probability</option>
-         <option key='earliest' value='earliest'>Earliest</option>
-         <option key='latest' value='latest'>Latest</option>
-       </select>
-     </label>
+    return (
+      <label>
+        Sort by:
+        <select name="sort" onChange={this.handleChange.bind(this)} value={this.props.selected || ""}>
+          <option key='prob' value='prob'>Probability</option>
+          <option key='earliest' value='earliest'>Earliest</option>
+          <option key='latest' value='latest'>Latest</option>
+        </select>
+      </label>
+    );
+  }
+}
+
+
+class PerPage extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  handleChange(e) {
+    this.props.onChange(e.target.value);
+  }
+
+  render() {
+    return (
+      <label>
+        Results per page:
+        <select name="per_page" onChange={this.handleChange.bind(this)} value={this.props.selected || ""}>
+          <option key='10' value='10'>10</option>
+          <option key='25' value='25'>25</option>
+          <option key='50' value='50'>50</option>
+          <option key='100' value='100'>50</option>
+        </select>
+      </label>
+    );
+  }
+}
+
+
+class PageJump extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  handleChange(e) {
+    this.props.onChange(e.target.value);
+  }
+
+  render() {
+    return (
+      <label>
+        Go to page:
+        <input
+          name="page"
+          type="number"
+          value={this.props.value || ''}
+          onChange={this.handleChange.bind(this)}
+        />
+      </label>
     );
   }
 }
@@ -439,7 +489,9 @@ export class FilterForm extends React.Component {
       end_hour: moment({hour: query.end_hour || 23}),
       start_date: query.start_date,
       end_date: query.end_date,
-      sort: query.sort
+      sort: query.sort,
+      per_page: query.per_page,
+      page: '',
     };
   }
 
@@ -487,6 +539,14 @@ export class FilterForm extends React.Component {
     this.setState({sort: value});
   }
 
+  perPageChanged(value) {
+    this.setState({per_page: value});
+  }
+
+  pageChanged(value) {
+    this.setState({page: value});
+  }
+
   canSubmit() {
     const { start_hour, end_hour, min_prob, max_prob } = this.state;
     if (moment(start_hour).isAfter(end_hour)) {
@@ -509,7 +569,7 @@ export class FilterForm extends React.Component {
   }
 
   render() {
-    const { open, model, iteration, show_single, label, min_prob, max_prob, station, verification, single, start_hour, end_hour, start_date, end_date, sort } = this.state;
+    const { open, model, iteration, show_single, label, min_prob, max_prob, station, verification, single, start_hour, end_hour, start_date, end_date, sort, per_page, page } = this.state;
     const enabled = this.canSubmit();
     return (
       <Container>
@@ -590,6 +650,18 @@ export class FilterForm extends React.Component {
                   <SortOptions
                     selected={sort}
                     onChange={this.sortChanged.bind(this)}
+                  />
+                </p>
+                <p>
+                  <PerPage
+                    selected={per_page}
+                    onChange={this.perPageChanged.bind(this)}
+                  />
+                </p>
+                <p>
+                  <PageJump
+                    value={page}
+                    onChange={this.pageChanged.bind(this)}
                   />
                 </p>
                 <input type="submit" disabled={!enabled} value="Search Now" className="btn btn-primary" />
