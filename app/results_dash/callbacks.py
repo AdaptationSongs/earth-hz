@@ -1,5 +1,6 @@
 from datetime import datetime as dt
 from urllib.parse import parse_qs
+from itertools import cycle
 import pandas_datareader as pdr
 from dash import callback_context
 from dash.dependencies import Input
@@ -21,6 +22,12 @@ def get_option_text(options, selected):
     label = [option['label'] for option in options if option['value'] == selected]
     return label[0]
 
+
+def get_station_colors(project_id):
+    stations = MonitoringStation.query.filter(MonitoringStation.project_id == project_id).all()
+    station_names = [s.name for s in stations]
+    color_map = dict(zip(station_names, cycle(px.colors.qualitative.Plotly)))
+    return color_map
 
 def register_callbacks(dashapp):
 
@@ -75,7 +82,8 @@ def register_callbacks(dashapp):
                 per_file = db.session.query(ModelOutput.file_name, func.count(ModelOutput.id).label('count')).filter(ModelOutput.iteration_id == selected_iteration_id, ModelOutput.label_id == selected_label_id, ModelOutput.probability >= float(min_prob), ModelOutput.probability <= float(max_prob)).group_by(ModelOutput.file_name).subquery()
                 per_day = db.session.query(func.min(MonitoringStation.id).label('station_id'), MonitoringStation.name.label('station'), func.sum(per_file.columns.count).label('count'), func.date(AudioFile.timestamp).label('date')).join(AudioFile, per_file.columns.file_name == AudioFile.name).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == project_id).group_by('station').group_by('date').order_by('date')
                 df = pd.read_sql(per_day.statement, db.session.bind)
-            fig = px.line(df, x='date', y='count', custom_data=['station_id', 'station'], color='station', title='Daily count')
+                station_colors = get_station_colors(project_id)
+            fig = px.line(df, x='date', y='count', custom_data=['station_id', 'station'], color='station', color_discrete_map=station_colors, title='Daily count')
             fig.update_traces(mode='markers')
         except:
             fig = px.line()
@@ -91,7 +99,8 @@ def register_callbacks(dashapp):
                 per_file = db.session.query(ModelOutput.file_name, func.count(ModelOutput.id).label('count')).filter(ModelOutput.iteration_id == selected_iteration_id, ModelOutput.label_id == selected_label_id, ModelOutput.probability >= float(min_prob), ModelOutput.probability <= float(max_prob)).group_by(ModelOutput.file_name).subquery()
                 per_hour = db.session.query(func.min(MonitoringStation.id).label('station_id'), MonitoringStation.name.label('station'), func.sum(per_file.columns.count).label('count'), func.date(AudioFile.timestamp).label('date'), func.extract('hour', AudioFile.timestamp).label('hour')).join(AudioFile, per_file.columns.file_name == AudioFile.name).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).group_by('station').group_by('date').group_by('hour').filter(MonitoringStation.project_id == project_id, func.date(AudioFile.timestamp) == selected_date).order_by('hour')
                 df = pd.read_sql(per_hour.statement, db.session.bind)
-            fig = px.line(df, x='hour', y='count', custom_data=['station_id', 'station'], color='station', title='Hourly count for '+selected_date)
+                station_colors = get_station_colors(project_id)
+            fig = px.line(df, x='hour', y='count', custom_data=['station_id', 'station'], color='station', color_discrete_map=station_colors, title='Hourly count for '+selected_date)
             fig.update_traces(mode='markers')
         except:
             fig = px.line()
