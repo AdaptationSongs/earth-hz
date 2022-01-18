@@ -108,7 +108,9 @@ def register_dashapps(app):
                          server=app,
                          url_base_pathname='/results_dash/',
                          assets_folder=get_root_path(__name__) + '/results_dash/assets/',
-                         meta_tags=[meta_viewport])
+                         meta_tags=[meta_viewport],
+                         external_stylesheets=['https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css']
+                   )
 
     with app.app_context():
         results_dash.title = 'Results Dashboard'

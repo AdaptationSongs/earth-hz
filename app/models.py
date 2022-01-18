@@ -171,8 +171,19 @@ class Label(db.Model):
     common_names = db.relationship('CommonName', back_populates='label')
     restricted = db.Column(db.Boolean, default=False)
 
+    def translate(self, language='en'):
+        result = CommonName.query.join(Language).filter(CommonName.label_id == self.id, Language.code == language).first()
+        if result:
+            return result.name
+        else:
+            return None
+
     def __repr__(self):
-        return self.name
+        translation =  self.translate()
+        if translation:
+            return self.name + ' (' + translation + ')'
+        else:
+            return self.name
 
 
 class Language(db.Model):
