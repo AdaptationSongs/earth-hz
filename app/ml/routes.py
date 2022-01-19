@@ -20,7 +20,7 @@ def list_outputs(project_id):
     if permission.can():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', type=int) or current_app.config['ITEMS_PER_PAGE']
-        q = ModelOutput.query.join(AudioFile).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).join(ModelIteration).join(MLModel).filter(MLModel.project_id == project_id)
+        q = ModelOutput.query.join(AudioFile).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).join(ModelIteration)
         iq = ModelIteration.query.join(MLModel).filter(MLModel.project_id == project_id).filter(ModelIteration.status == StatusEnum.finished).order_by(ModelIteration.updated.desc())
         latest_iteration = iq.first()
         if latest_iteration:

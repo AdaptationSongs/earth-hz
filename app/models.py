@@ -322,7 +322,7 @@ class ModelLabel(db.Model):
 class ModelOutput(db.Model):
     __tablename__ = 'model_outputs'
     id = db.Column(db.Integer, primary_key=True)
-    iteration_id = db.Column(db.Integer, db.ForeignKey(ModelIteration.id), nullable=False)
+    iteration_id = db.Column(db.Integer, db.ForeignKey(ModelIteration.id), nullable=False, index=True)
     iteration = db.relationship('ModelIteration')
     file_name = db.Column(db.String(255), db.ForeignKey(AudioFile.name), nullable=False, index=True)
     file = db.relationship('AudioFile')
@@ -330,7 +330,7 @@ class ModelOutput(db.Model):
     label = db.relationship('Label')
     offset = db.Column(db.Float, nullable=False, index=True)
     duration = db.Column(db.Float, nullable=False)
-    probability = db.Column(db.Float, nullable=False)
+    probability = db.Column(db.Float, nullable=False, index=True)
 
     def start_time(self):
         return str(self.file.timestamp + timedelta(seconds=self.offset))
