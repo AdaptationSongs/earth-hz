@@ -190,6 +190,7 @@ class Language(db.Model):
     __tablename__ = 'language'
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(5), nullable=False)
+    code3 = db.Column(db.String(3))
     name = db.Column(db.String(255), unique=True, nullable=False)
 
     def __repr__(self):
