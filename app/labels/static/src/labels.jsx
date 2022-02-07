@@ -1,5 +1,4 @@
 import React from 'react';
-import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
@@ -85,30 +84,30 @@ class LabelList extends React.Component {
 }
 
 
-class AutoCompleteLabel extends React.Component {
+export class AutoCompleteLabel extends React.Component {
   constructor(props) {
     super();
   }
 
   shouldItemRender(item, value) {
     return (
-      (item.label.name.toLowerCase().indexOf(value.toLowerCase()) > -1) ||
-      (translate_label(item.label).toLowerCase().indexOf(value.toLowerCase()) > -1)
+      (item.name.toLowerCase().indexOf(value.toLowerCase()) > -1) ||
+      (translate_label(item).toLowerCase().indexOf(value.toLowerCase()) > -1)
     );
   }
 
   getSuggestionValue(item) {
-    return (translate_label(item.label) || item.label.name);
+    return (translate_label(item) || item.name);
   }
 
   renderSuggestion(item, isHighlighted) {
     return (
       <div
-        key={item.label.id}
+        key={item.id}
         style={{ background: isHighlighted ? 'lightgray' : 'white' }}
         className='mb-1'
       >
-        {item.label.name} {format_common_name(item.label)}
+        {item.name} {format_common_name(item)}
       </div>
     );
   }
@@ -121,7 +120,7 @@ class AutoCompleteLabel extends React.Component {
 
   handleSelection(value, item) {
     this.props.onInput(value);
-    this.props.onSelect(item.label.id);
+    this.props.onSelect(item.id);
   }
 
   handleClear() {
@@ -222,7 +221,7 @@ export class AddLabelForm extends React.Component {
           primary_types: filtered_types,
         })
       })
-      .then(fetch('/labels/_get_project_labels/' + this.props.project_id)
+      .then(fetch('/labels/_get_all/project/' + this.props.project_id)
         .then((response) => {
           return response.json()
         })
@@ -241,7 +240,7 @@ export class AddLabelForm extends React.Component {
 
   handleTypeChange(e) {
     const type = e.target.value;
-    const filtered_labels = this.state.all_labels.filter((row) => row.label.type.id == type);
+    const filtered_labels = this.state.all_labels.filter((row) => row.type.id == type);
     const filtered_types = this.state.all_types.filter((row) => row.parent_id == type);
     this.setState({
           selected_type: type,
@@ -257,7 +256,7 @@ export class AddLabelForm extends React.Component {
 
   handleSubTypeChange(e) {
     const sub_type = e.target.value;
-    const filtered_labels = this.state.all_labels.filter((row) => row.label.type.id == sub_type);
+    const filtered_labels = this.state.all_labels.filter((row) => row.type.id == sub_type);
     this.setState({
       selected_sub_type: sub_type,
       sub_labels: filtered_labels
@@ -342,8 +341,8 @@ export class AddLabelForm extends React.Component {
               onChange={this.handleSubLabelChange.bind(this)}
             >
               <option key="default" value=""></option>
-              {sub_labels.map((label) =>
-                <option key={label.label.id} value={label.label.id}>{label.label.name}</option>
+              {sub_labels.map((row) =>
+                <option key={row.id} value={row.id}>{row.name}</option>
               )}
             </Form.Control>
           </Col>

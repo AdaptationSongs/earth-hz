@@ -243,12 +243,12 @@ class ProjectLabel(db.Model):
 
     @hybrid_property
     def clip_count(self):
-        return LabeledClip.query.join(AudioFile).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == self.project_id).filter(LabeledClip.label_id == self.label_id).count()
+        return LabeledClip.query.join(AudioFile).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == self.project_id).filter((LabeledClip.label_id == self.label_id) | (LabeledClip.sub_label_id == self.label_id)).count()
 
     @clip_count.expression
     def clip_count(cls):
         q = db.select([db.func.count(LabeledClip.id)])
-        q = q.select_from(db.join(q.froms[0], AudioFile).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation)).where(MonitoringStation.project_id == cls.project_id).where(LabeledClip.label_id == cls.label_id)
+        q = q.select_from(db.join(q.froms[0], AudioFile).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation)).where(MonitoringStation.project_id == cls.project_id).where((LabeledClip.label_id == cls.label_id) | (LabeledClip.sub_label_id == cls.label_id))
         return q
 
 

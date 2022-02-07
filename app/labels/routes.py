@@ -3,7 +3,7 @@ from flask import render_template, abort, flash, redirect, url_for, request, g, 
 from flask_login import current_user, login_required
 from app import db
 from app.models import User, AudioFile, Label, LabelType, LabeledClip, Equipment, MonitoringStation, Project, ProjectLabel, CommonName
-from app.schema import LabelTypeSchema, ProjectLabelSchema, LabeledClipSchema
+from app.schema import LabelTypeSchema, LabelSchema, LabeledClipSchema
 from app.user.permissions import ViewResultsPermission, AddLabelPermission, UploadDataPermission, ManageLabelsPermission
 from app.labels import bp
 from app.labels.forms import FilterForm, EditForm, DeleteForm
@@ -115,13 +115,20 @@ def _get_label_types():
     return label_types_schema.jsonify(all_types)
 
 
-@bp.route('/_get_project_labels/<project_id>')
-def _get_project_labels(project_id):
-    q = ProjectLabel.query.filter(ProjectLabel.project_id == project_id)
-    q = q.join(Label).order_by(Label.name)
-    project_labels = q.all()
-    project_labels_schema = ProjectLabelSchema(many=True)
-    return project_labels_schema.jsonify(project_labels)
+@bp.route('/_get_all')
+@bp.route('/_get_all/project/<project_id>')
+def _get_all_labels(project_id=None):
+    q = Label.query
+    if project_id:
+        q = q.join(ProjectLabel, ProjectLabel.label_id == Label.id).filter(ProjectLabel.project_id == project_id)
+    sub = request.args.get('sub', type=int)
+    if sub == 1:
+        q = q.join(LabelType).filter(LabelType.parent_id != None)
+    elif sub == 0:
+        q = q.join(LabelType).filter(LabelType.parent_id == None)
+    labels = q.order_by(Label.name).all()
+    labels_schema = LabelSchema(many=True)
+    return labels_schema.jsonify(labels)
 
 
 @bp.route('/_get_clip_labels/<file_name>')

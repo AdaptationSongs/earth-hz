@@ -49,6 +49,7 @@ class ProjectLabelSchema(ma.SQLAlchemyAutoSchema):
         include_fk = True
 
     label = ma.Nested(LabelSchema)
+    clip_count = ma.Function(lambda obj: obj.clip_count)
 
 
 class LabeledClipSchema(ma.SQLAlchemyAutoSchema):

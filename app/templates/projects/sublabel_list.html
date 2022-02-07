@@ -5,19 +5,15 @@
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=project.id) }}">{{ project.name }}</a></li>
-      <li class="breadcrumb-item active">Project Labels</li>
+      <li class="breadcrumb-item"><a href="{{ url_for('projects.list_labels', project_id=project.id) }}">Project Labels</a></li>
+      <li class="breadcrumb-item active">Sublabels</li>
     </ol>
   </nav>
   <div class="row">
     <div class="col">
-      <h2>Project Labels</h2>
-      <p>Users can assign these labels to clips of uploaded audio recordings for this project.</p>
-      <p>Example: species</p>
-    </div>
-    <div class="col-md-3">
-      <nav class="nav flex-column">
-        <a class="nav-link" href="{{ url_for('projects.list_sublabels', project_id=project.id) }}">Manage Sublabels</a>
-      </nav>
+      <h2>Project Sublabels</h2>
+      <p>Users can assign these sublabels to clips of uploaded audio recordings for this project.</p>
+      <p>Example: types of vocalizations</p>
     </div>
   </div>
   <div id="label-list"></div>
@@ -30,7 +26,7 @@
     const list_props = {
       project_id: {{ project.id }},
       labels: {{ labels_json | safe }},
-      sub: 0
+      sub: 1
     };
     ReactDOM.render(
       React.createElement(EarthHz.ProjectLabels, list_props, null),
