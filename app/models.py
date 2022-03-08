@@ -91,7 +91,7 @@ class Equipment(db.Model):
     type = db.relationship('EquipmentType')
     manufacturer = db.Column(db.String(255))
     model = db.Column(db.String(255))
-    serial_number = db.Column(db.String(255))
+    serial_number = db.Column(db.String(255), unique=True)
     deployed = db.Column(db.DateTime)
     removed = db.Column(db.DateTime)
     notes = db.Column(db.String(255))
