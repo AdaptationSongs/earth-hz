@@ -3,7 +3,7 @@ from flask import render_template, flash, redirect, url_for, request, g, \
 from flask_login import current_user, login_required
 from sqlalchemy import extract
 from app import db
-from app.models import User, AudioFile, Equipment, MonitoringStation, Project
+from app.models import User, AudioFile, MonitoringStation, Project
 from app.audio import bp
 from app.audio.forms import FilterForm
 from app.user.permissions import ListenPermission
@@ -150,8 +150,8 @@ def spectro(file_name, offset):
 @login_required
 def list_files(project_id=None):
     page = request.args.get('page', 1, type=int)
-    filter_form = FilterForm(request.args, csrf_enabled=False)
-    q = AudioFile.query.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation)
+    filter_form = FilterForm(request.args, meta={'csrf': False})
+    q = AudioFile.query.join(AudioFile.monitoring_station)
     fq = MonitoringStation.query
     if project_id:
         q = q.filter(MonitoringStation.project_id == project_id)
@@ -179,7 +179,7 @@ def list_files(project_id=None):
 @bp.route('/audio/_get_date_range/<project_id>')
 def _get_date_range(project_id=None):
     station_id = request.args.get('station', type=int)
-    q = AudioFile.query.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation)
+    q = AudioFile.query.join(AudioFile.monitoring_station)
     if project_id:
         q = q.filter(MonitoringStation.project_id == project_id)
     if station_id:

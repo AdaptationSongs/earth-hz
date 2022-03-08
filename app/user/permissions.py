@@ -31,7 +31,8 @@ class ListenPermission(Permission):
     def __init__(self, file_name):
         restricted = LabeledClip.query.filter(LabeledClip.file_name == file_name).join(Label, Label.id == LabeledClip.label_id).filter(Label.restricted == True).first()
         if restricted:
-            station = MonitoringStation.query.join(Equipment).join(AudioFile, AudioFile.sn == Equipment.serial_number).filter(AudioFile.name == file_name).first()
+            audio_file = AudioFile.query.filter(AudioFile.name == file_name).first()
+            station = audio_file.monitoring_station
             project_need = ItemNeed('project_coordinator', int(station.project_id), 'project_role')
         else:
             project_need = UserNeed(current_user.id)

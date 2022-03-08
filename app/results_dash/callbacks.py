@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 import pandas as pd
 from sqlalchemy import func, extract, desc
 from app import db
-from app.models import ModelOutput, AudioFile, Equipment, MonitoringStation, Project, ProjectLabel, Label, MLModel, ModelIteration, ModelLabel, StatusEnum
+from app.models import ModelOutput, AudioFile, MonitoringStation, Project, ProjectLabel, Label, MLModel, ModelIteration, ModelLabel, StatusEnum
 
 
 def get_project_id(query):
@@ -98,7 +98,7 @@ def register_callbacks(dashapp):
             project_id = get_project_id(query)
             with dashapp.server.app_context():
                 per_file = db.session.query(ModelOutput.file_name, func.count(ModelOutput.id).label('count')).filter(ModelOutput.iteration_id == selected_iteration_id, ModelOutput.label_id == selected_label_id, ModelOutput.probability >= float(min_prob), ModelOutput.probability <= float(max_prob)).group_by(ModelOutput.file_name).subquery()
-                per_day = db.session.query(func.min(MonitoringStation.id).label('station_id'), MonitoringStation.name.label('station'), func.sum(per_file.columns.count).label('count'), func.date(AudioFile.timestamp).label('date')).join(AudioFile, per_file.columns.file_name == AudioFile.name).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == project_id, func.extract('hour', AudioFile.timestamp) >= start_hour, func.extract('hour', AudioFile.timestamp) <= end_hour,).group_by('station').group_by('date').order_by('date')
+                per_day = db.session.query(func.min(MonitoringStation.id).label('station_id'), MonitoringStation.name.label('station'), func.sum(per_file.columns.count).label('count'), func.date(AudioFile.timestamp).label('date')).join(AudioFile, per_file.columns.file_name == AudioFile.name).join(AudioFile.monitoring_station).filter(MonitoringStation.project_id == project_id, func.extract('hour', AudioFile.timestamp) >= start_hour, func.extract('hour', AudioFile.timestamp) <= end_hour,).group_by('station').group_by('date').order_by('date')
                 df = pd.read_sql(per_day.statement, db.session.bind)
                 station_colors = get_station_colors(project_id)
                 label = Label.query.get(selected_label_id)
@@ -124,7 +124,7 @@ def register_callbacks(dashapp):
             selected_date = clickData['points'][0]['x']
             with dashapp.server.app_context():
                 per_file = db.session.query(ModelOutput.file_name, func.count(ModelOutput.id).label('count')).filter(ModelOutput.iteration_id == selected_iteration_id, ModelOutput.label_id == selected_label_id, ModelOutput.probability >= float(min_prob), ModelOutput.probability <= float(max_prob)).group_by(ModelOutput.file_name).subquery()
-                per_hour = db.session.query(func.min(MonitoringStation.id).label('station_id'), MonitoringStation.name.label('station'), func.sum(per_file.columns.count).label('count'), func.date(AudioFile.timestamp).label('date'), func.extract('hour', AudioFile.timestamp).label('hour')).join(AudioFile, per_file.columns.file_name == AudioFile.name).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).group_by('station').group_by('date').group_by('hour').filter(MonitoringStation.project_id == project_id, func.date(AudioFile.timestamp) == selected_date).order_by('hour')
+                per_hour = db.session.query(func.min(MonitoringStation.id).label('station_id'), MonitoringStation.name.label('station'), func.sum(per_file.columns.count).label('count'), func.date(AudioFile.timestamp).label('date'), func.extract('hour', AudioFile.timestamp).label('hour')).join(AudioFile, per_file.columns.file_name == AudioFile.name).join(AudioFile.monitoring_station).group_by('station').group_by('date').group_by('hour').filter(MonitoringStation.project_id == project_id, func.date(AudioFile.timestamp) == selected_date).order_by('hour')
                 df = pd.read_sql(per_hour.statement, db.session.bind)
                 station_colors = get_station_colors(project_id)
                 label = Label.query.get(selected_label_id)
@@ -174,7 +174,7 @@ def register_callbacks(dashapp):
         try:
             project_id = get_project_id(query)
             with dashapp.server.app_context():
-                project_files = AudioFile.query.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == project_id).with_entities(AudioFile.size, AudioFile.timestamp, MonitoringStation.name.label('station')).subquery()
+                project_files = AudioFile.query.join(AudioFile.monitoring_station).filter(MonitoringStation.project_id == project_id).with_entities(AudioFile.size, AudioFile.timestamp, MonitoringStation.name.label('station')).subquery()
                 bytes_per_day = db.session.query(func.sum(project_files.c.size).label('bytes'), func.date(project_files.c.timestamp).label('date'), project_files.c.station).group_by('station').group_by('date').order_by('date')
                 df = pd.read_sql(bytes_per_day.statement, db.session.bind)
                 df['MB'] = df['bytes'] / (1024 * 1024)
@@ -204,7 +204,7 @@ def register_callbacks(dashapp):
             if callback_context.triggered[0]['prop_id'] == 'daily-graph.clickData':
                 selected_date = daily_click_data['points'][0]['x']
             with dashapp.server.app_context():
-                project_files = AudioFile.query.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == project_id, func.date(AudioFile.timestamp) == selected_date).with_entities(AudioFile.size, AudioFile.timestamp, MonitoringStation.name.label('station')).subquery()
+                project_files = AudioFile.query.join(AudioFile.monitoring_station).filter(MonitoringStation.project_id == project_id, func.date(AudioFile.timestamp) == selected_date).with_entities(AudioFile.size, AudioFile.timestamp, MonitoringStation.name.label('station')).subquery()
                 bytes_per_hour = db.session.query(func.sum(project_files.c.size).label('bytes'), func.extract('hour', project_files.c.timestamp).label('hour'), project_files.c.station).group_by('station').group_by('hour').order_by('hour')
                 df = pd.read_sql(bytes_per_hour.statement, db.session.bind)
                 df['MB'] = df['bytes'] / 1024 / 1024

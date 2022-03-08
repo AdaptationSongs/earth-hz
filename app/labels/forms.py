@@ -6,6 +6,7 @@ from wtforms.ext.sqlalchemy.fields import QuerySelectField
 
 class FilterForm(FlaskForm):
     select_label = QuerySelectField('Label:', validators=[Optional()], allow_blank=True, blank_text='(All)')
+    certain = SelectField('Certain:', choices=[('', 'Any'), ('0', 'Maybe'), ('1', 'Definitely')], default='1', validators=[Optional()])
     submit_button = SubmitField('Filter results')
 
 

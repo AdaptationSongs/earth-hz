@@ -3,11 +3,12 @@ from flask import render_template, abort, flash, redirect, url_for, request, g, 
 from flask_login import current_user, login_required
 from sqlalchemy import extract, func, and_
 from app import db
-from app.models import AudioFile, Equipment, MonitoringStation, MLModel, ModelIteration, ModelOutput, Project, ProjectLabel, Label, LabelType, ModelLabel, LabeledClip, StatusEnum
+from app.models import AudioFile, Equipment, MonitoringStation, MLModel, ModelIteration, ModelOutput, Project, ProjectLabel, Label, LabelType, ModelLabel, LabeledClip, TrainingClip, StatusEnum
 from app.schema import ModelOutputSchema
 from app.user.permissions import ViewResultsPermission, UploadDataPermission, ManageLabelsPermission
 from app.ml import bp
-from app.ml.forms import UploadForm, IterationLabelForm, DeleteForm, PreviousForm, NextForm, EditModelForm, EditIterationForm
+from app.ml.forms import UploadForm, IterationLabelForm, DeleteForm, PreviousForm, NextForm, EditModelForm, EditIterationForm, UseTrainingClipsForm
+from app.labels.forms import FilterForm
 import pandas as pd
 from datetime import datetime
 import flask_excel as excel
@@ -20,7 +21,7 @@ def list_outputs(project_id):
     if permission.can():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', type=int) or current_app.config['ITEMS_PER_PAGE']
-        q = ModelOutput.query.join(AudioFile).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).join(ModelIteration)
+        q = ModelOutput.query.join(AudioFile).join(AudioFile.monitoring_station).join(ModelIteration)
         iq = ModelIteration.query.join(MLModel).filter(MLModel.project_id == project_id).filter(ModelIteration.status == StatusEnum.finished).order_by(ModelIteration.updated.desc())
         latest_iteration = iq.first()
         if latest_iteration:
@@ -38,7 +39,7 @@ def list_outputs(project_id):
         q = q.filter(ModelOutput.probability <= max_prob)
         station = request.args.get('station', type=int)
         if station:
-            q = q.filter(Equipment.station_id == station)
+            q = q.filter(MonitoringStation.id == station)
         start_date = request.args.get('start_date')
         if start_date:
             q = q.filter(func.date(AudioFile.timestamp) >= start_date)
@@ -164,15 +165,12 @@ def list_iterations(model_id):
 @login_required
 def view_iteration(iteration_id):
     iteration = ModelIteration.query.get(iteration_id)
-    model_id = iteration.model_id
-    model = MLModel.query.get(model_id)
-    project_id = model.project_id
+    project_id = iteration.model.project_id
     permission = ManageLabelsPermission(project_id)
     if permission.can():
         page = request.args.get('page', 1, type=int)
         q = ModelLabel.query.filter(ModelLabel.iteration_id == iteration_id).join(Label, ModelLabel.label_id == Label.id).join(LabelType).filter(LabelType.parent_type == None).order_by(Label.name)
         labels = q.paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-        project = Project.query.get(project_id)
         delete_form = DeleteForm()
         previous_status = iteration.previous_status()
         if previous_status:
@@ -186,7 +184,8 @@ def view_iteration(iteration_id):
             next_form.next_button.label.text = str(next_status) + ' \u00BB'
         else:
             next_form = None
-        return render_template('ml/iteration_view.html', title='Model Iteration Labels', labels=labels, iteration=iteration, model=model, project=project, delete_form=delete_form, previous_form=previous_form, next_form=next_form)
+        finished = (iteration.status == StatusEnum.finished)
+        return render_template('ml/iteration_view.html', title='Model Iteration Labels', labels=labels, iteration=iteration, finished=finished, delete_form=delete_form, previous_form=previous_form, next_form=next_form)
     # permission denied
     abort(403)
 
@@ -254,7 +253,7 @@ def edit_label(iteration_id, label_id):
             db.session.add(iteration)
             db.session.commit()
             flash(change + ' ' + label.name)
-            return redirect(url_for('ml.view_iteration', iteration_id=iteration_id))
+            return redirect(url_for('ml.iteration_clips', iteration_id=iteration_id, select_label=label_id))
         project = Project.query.get(project_id)
         return render_template('ml/label_edit.html', title='Add/Edit Label', form=form, iteration=iteration, model=model, project=project, label=label)
     # permission denied
@@ -406,6 +405,42 @@ def copy_iteration(iteration_id):
     abort(403)
 
 
+@bp.route('/iteration/<iteration_id>/clips', methods=['GET', 'POST'])
+@login_required
+def iteration_clips(iteration_id):
+    iteration = ModelIteration.query.get(iteration_id)
+    project = iteration.model.project
+    q = LabeledClip.query.join(AudioFile).join(AudioFile.monitoring_station).filter(MonitoringStation.project == project)
+    filter_form = FilterForm(request.args, meta={'csrf': False})
+    fq = Label.query.join(ModelLabel, Label.id == ModelLabel.label_id).filter(ModelLabel.iteration == iteration).order_by(Label.name)
+    filter_form.select_label.query = fq
+    if filter_form.validate():
+        if filter_form.select_label.data:
+            q = q.filter(LabeledClip.label == filter_form.select_label.data)
+        if filter_form.certain.data:
+            q = q.filter(LabeledClip.certain == filter_form.certain.data)
+    permission = ManageLabelsPermission(project.id)
+    labeling = (iteration.status == StatusEnum.labeling)
+    use_form = UseTrainingClipsForm()
+    if permission.can() and labeling and use_form.validate_on_submit():
+        training_clips_q = TrainingClip.query.join(LabeledClip).filter(TrainingClip.iteration_id == iteration.id)
+        if use_form.use.data:
+            selected_clips = q.filter(LabeledClip.id.notin_(training_clips_q.with_entities(LabeledClip.id)))
+            for clip in selected_clips:
+                training_clip = TrainingClip(iteration_id=iteration.id, labeled_clip_id=clip.id)
+                db.session.add(training_clip)
+        if use_form.do_not_use.data:
+            selected_clips = training_clips_q.filter(LabeledClip.id.in_(q.with_entities(LabeledClip.id)))
+            for training_clip in selected_clips:
+                db.session.delete(training_clip)
+        db.session.commit()
+    clips_count = q.count()
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', current_app.config['ITEMS_PER_PAGE'], type=int)
+    clips = q.paginate(page, per_page, False)
+    return render_template('ml/iteration_clips.html', title='Labeled Clips', filter_form=filter_form, use_form=use_form, clips_count=clips_count, clips=clips, iteration=iteration, labeling=labeling)
+
+
 @bp.route('/project/<project_id>/upload_single_label', methods=['GET', 'POST'])
 @login_required
 def upload_single_label(project_id):
@@ -452,3 +487,24 @@ def _get_model_labels(iteration_id):
     labels = [{'id': r.label.id, 'name': r.label.name} for r in results]
     return jsonify(labels)
 
+
+@bp.route('/iteration/<iteration_id>/_use_clip/<clip_id>', methods=['GET', 'POST'])
+def _use_clip(iteration_id, clip_id):
+    q = TrainingClip.query.filter(TrainingClip.iteration_id == iteration_id).filter(TrainingClip.labeled_clip_id == clip_id)
+    training_clip = q.first()
+    is_used = (training_clip is not None)
+    if request.method == 'POST':
+        iteration = ModelIteration.query.get(iteration_id)
+        project_id = iteration.model.project_id
+        permission = ManageLabelsPermission(project_id)
+        if permission.can() and iteration.status == StatusEnum.labeling:
+            use = request.get_json()
+            if use == True and is_used == False:
+                training_clip = TrainingClip(iteration_id=iteration_id, labeled_clip_id=clip_id)
+                db.session.add(training_clip)
+                is_used = True
+            elif use == False and is_used == True:
+                db.session.delete(training_clip)
+                is_used = False
+            db.session.commit()
+    return jsonify(is_used)

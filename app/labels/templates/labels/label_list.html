@@ -3,7 +3,7 @@
 {% from 'bootstrap/pagination.html' import render_pagination %}
 
 {% block app_content %}
-    {{ render_form(filter_form, method='get', form_type='horizontal') }}
+    {{ render_form(filter_form, method='get', form_type='inline') }}
 
     {% for clip in clips.items %}
         <div class="card mt-3 mb-3">
@@ -12,6 +12,7 @@
                     <a class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ clip.file.name }}', '{{ clip.offset }}')">Play clip</a>
                     <h5 class="card-title">{{ clip.label.name }}{% if not clip.certain %} (maybe){% endif %}</h5>
                     <p class="card-text">Start time: {{ clip.start_time() }}</p>
+                    <p class="card-text">Monitoring Station: {{ clip.file.monitoring_station.name }}</p>
                     <p class="card-text">Recording device: {{ clip.file.sn }}</p>
                     <p class="card-text">submitted by {{ clip.user }} on {{ clip.modified }}</p>
                     <a class="btn btn-primary" href="{{ url_for('labels.view_clip', file_name=clip.file.name, offset=clip.offset) }}">Edit Labels</a>

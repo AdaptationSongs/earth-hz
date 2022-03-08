@@ -30,7 +30,7 @@
     const list_props = {
       project_id: {{ project.id }},
       duration: {{ config['CLIP_SECS'] }},
-      clips: JSON.parse('{{ clips_json|safe }}')
+      clips: {{ clips_json | safe }}
     };
     ReactDOM.render(
       React.createElement(EarthHz.FilterForm, {project_id: {{ project.id }}}, null),

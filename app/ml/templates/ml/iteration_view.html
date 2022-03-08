@@ -5,15 +5,27 @@
 {% block app_content %}
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=project.id) }}">{{ project.name }}</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_models', project_id=project.id) }}">Machine Learning Models</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_iterations', model_id=model.id) }}">{{ model.name }}</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=iteration.model.project.id) }}">{{ iteration.model.project.name }}</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_models', project_id=iteration.model.project.id) }}">Machine Learning Models</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_iterations', model_id=iteration.model.id) }}">{{ iteration.model.name }}</a></li>
       <li class="breadcrumb-item active">{{ iteration.updated }}</li>
     </ol>
   </nav>
   <h2>Model Iteration {{ iteration.updated }}</h2>
-  <p>{{ iteration.description }} <a href="{{ url_for('ml.edit_iteration', iteration_id=iteration.id) }}">edit</a></p>
-  <p><a href="{{ url_for('ml.copy_iteration', iteration_id=iteration.id) }}">New iteration based on this one</a></p>
+  <div class="row">
+    <div class="col">
+      <p>{{ iteration.description }}</p>
+    </div>
+    <div class="col-md-4">
+      <nav class="nav flex-column">
+        <a class="nav-link" href="{{ url_for('ml.edit_iteration', iteration_id=iteration.id) }}">Edit notes</a>
+        <a class="nav-link" href="{{ url_for('ml.copy_iteration', iteration_id=iteration.id) }}">New iteration based on this one</a>
+        {% if finished %}
+          <a class="nav-link" href="{{ url_for('ml.list_outputs', project_id=iteration.model.project_id, model=iteration.model.id, iteration=iteration.id) }}">Verify predictions</a>
+        {% endif %}
+      </nav>
+    </div>
+  </div>
   <h3>Current Status: {{ iteration.status }}</h3>
   {% if iteration.accuracy %}
     <h4>Accuracy: {{ iteration.accuracy }}%</h4>
@@ -30,15 +42,17 @@
   {% endif %}
   <table class="table">
     <th>Label</th>
-    <th>Clips</th>
+    <th>Labeled clips</th>
+    <th>Used for training</th>
     <th>Common names</th>
     <th>Combine with</th>
     <th>Training errors</th>
     <th>Actions</th>
     {% for label in labels.items %}
       <tr>
-        <td><a href="{{ url_for('labels.list_labels', project_id=project.id, select_label=label.label.id) }}">{{ label.label.name }}</a></td>
+        <td><a href="{{ url_for('ml.iteration_clips', iteration_id=iteration.id, select_label=label.label.id) }}">{{ label.label.name }}</a></td>
         <td>{{ label.project_label.clip_count }}</td>
+        <td>{{ label.training_clips.count() }}</td>
         <td>
           <ul>
             {% for common_name in label.label.common_names %}

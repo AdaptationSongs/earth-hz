@@ -18,19 +18,23 @@ def list_labels(project_id=None):
     permission = ViewResultsPermission(project_id)
     if permission.can():
         page = request.args.get('page', 1, type=int)
-        filter_form = FilterForm(request.args, csrf_enabled=False)
+        filter_form = FilterForm(request.args, meta={'csrf': False})
         fq = Label.query.join(LabelType).filter(LabelType.parent_id == None)
         q = LabeledClip.query.join(AudioFile).join(LabeledClip.label)
         view_restricted = ManageLabelsPermission(project_id)
         if not view_restricted.can():
             q = q.filter((Label.restricted == False) | (Label.restricted == None))
         if project_id:
-            q = q.join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == project_id)
+            q = q.join(AudioFile.monitoring_station).filter(MonitoringStation.project_id == project_id)
             fq = fq.join(ProjectLabel, Label.id == ProjectLabel.label_id).filter(ProjectLabel.project_id == project_id)
         filter_form.select_label.query = fq
         if filter_form.validate():
             if filter_form.select_label.data:
                 q = q.filter(Label.id == filter_form.select_label.data.id)
+            if filter_form.certain.data == '1':
+                q = q.filter(LabeledClip.certain == True)
+            if filter_form.certain.data == '0':
+                q = q.filter(LabeledClip.certain == False)
         clips = q.order_by(AudioFile.timestamp).order_by(LabeledClip.offset).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
         return render_template('labels/label_list.html', title='Labels', clips=clips, project_id=project_id, filter_form=filter_form)
     # permission denied
@@ -42,7 +46,7 @@ def export_csv(project_id):
     permission = UploadDataPermission(project_id)
     if permission.can():
         sub = aliased(Label)
-        q = LabeledClip.query.join(LabeledClip.label).join(sub, LabeledClip.sub_label, isouter=True).join(User).join(AudioFile).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == project_id).with_entities(AudioFile.path, LabeledClip.file_name, LabeledClip.offset, Label.name.label('label'), sub.name.label('sub_label'), LabeledClip.certain, LabeledClip.notes, LabeledClip.modified, User.name.label('user')).all()
+        q = LabeledClip.query.join(LabeledClip.label).join(sub, LabeledClip.sub_label, isouter=True).join(User).join(AudioFile).join(AudioFile.monitoring_station).filter(MonitoringStation.project_id == project_id).with_entities(AudioFile.path, LabeledClip.file_name, LabeledClip.offset, Label.name.label('label'), sub.name.label('sub_label'), LabeledClip.certain, LabeledClip.notes, LabeledClip.modified, User.name.label('user')).all()
         column_names = ['path', 'file_name', 'offset', 'label', 'sub_label', 'certain', 'notes', 'modified', 'user']
         return excel.make_response_from_query_sets(q, column_names, 'csv')
     # permission denied

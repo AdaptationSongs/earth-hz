@@ -103,12 +103,13 @@ class Equipment(db.Model):
 class AudioFile(db.Model):
     __tablename__ = 'audio_files'
     id = db.Column(db.Integer, primary_key=True, nullable=False)
-    sn = db.Column(db.String(255))
-    recording_device = db.relationship('Equipment', foreign_keys=[sn], primaryjoin='Equipment.serial_number == AudioFile.sn')
+    sn = db.Column(db.String(255), db.ForeignKey(Equipment.serial_number), nullable=False)
+    recording_device = db.relationship('Equipment')
     timestamp = db.Column(db.DateTime)
     path = db.Column(db.String(255))
     name = db.Column(db.String(255), unique=True)
     size = db.Column(db.Integer)
+    monitoring_station = db.relationship('MonitoringStation', secondary='join(MonitoringStation, Equipment)', primaryjoin='and_(MonitoringStation.id == Equipment.station_id, Equipment.serial_number == AudioFile.sn, or_(AudioFile.timestamp >= Equipment.deployed, Equipment.deployed == None), or_(AudioFile.timestamp <= Equipment.removed, Equipment.removed == None))', uselist=False, viewonly=True)
 
 
 class ClusterGroup(db.Model):
@@ -243,7 +244,7 @@ class ProjectLabel(db.Model):
 
     @hybrid_property
     def clip_count(self):
-        return LabeledClip.query.join(AudioFile).join(Equipment, AudioFile.sn == Equipment.serial_number).join(MonitoringStation).filter(MonitoringStation.project_id == self.project_id).filter((LabeledClip.label_id == self.label_id) | (LabeledClip.sub_label_id == self.label_id)).count()
+        return LabeledClip.query.join(AudioFile).join(AudioFile.monitoring_station).filter(MonitoringStation.project_id == self.project_id).filter((LabeledClip.label_id == self.label_id) | (LabeledClip.sub_label_id == self.label_id)).count()
 
     @clip_count.expression
     def clip_count(cls):
@@ -306,6 +307,14 @@ class ModelIteration(db.Model):
         else:
             return None
 
+class TrainingClip(db.Model):
+    __tablename__ = 'training_clips'
+    id = db.Column(db.Integer, primary_key=True)
+    iteration_id = db.Column(db.Integer, db.ForeignKey(ModelIteration.id), nullable=False)
+    iteration = db.relationship('ModelIteration')
+    labeled_clip_id = db.Column(db.Integer, db.ForeignKey(LabeledClip.id), nullable=False)
+    labeled_clip = db.relationship('LabeledClip')
+
 
 class ModelLabel(db.Model):
     __tablename__ = 'model_labels'
@@ -317,6 +326,7 @@ class ModelLabel(db.Model):
     combine_with_id = db.Column(db.Integer, db.ForeignKey(Label.id))
     combine_with = db.relationship('Label', foreign_keys=[combine_with_id])
     project_label = db.relationship('ProjectLabel', secondary='join(Project, MLModel).join(ModelIteration)', primaryjoin='and_(ProjectLabel.label_id == ModelLabel.label_id, ModelIteration.id == ModelLabel.iteration_id)', uselist=False, viewonly=True)
+    training_clips = db.relationship('TrainingClip', secondary='join(TrainingClip, LabeledClip)', primaryjoin='and_(TrainingClip.labeled_clip_id == LabeledClip.id, TrainingClip.iteration_id == ModelLabel.iteration_id, LabeledClip.label_id == ModelLabel.label_id)', uselist=True, viewonly=True, lazy='dynamic')
     training_errors = db.relationship('TrainingError', primaryjoin='and_(foreign(ModelLabel.iteration_id) == TrainingError.iteration_id, foreign(ModelLabel.label_id) == TrainingError.should_be_id)', uselist=True, viewonly=True, lazy='dynamic')
 
 

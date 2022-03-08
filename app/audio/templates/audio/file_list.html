@@ -19,6 +19,7 @@
                 <div class="card mt-3 mb-3">
                     <div class="card-body">
                         <p class="card-text">Start time: {{ file.timestamp }}</p>
+                        <p class="card-text">Monitoring Station: {{ file.monitoring_station.name }}</p>
                         <p class="card-text">Recording device: {{ file.sn }}</p>
                         <a class="btn btn-primary" href="javascript:void(0)" onclick="playStream('{{file.name}}')" >Play file</a>
                     </div>

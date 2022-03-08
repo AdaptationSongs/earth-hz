@@ -32,7 +32,7 @@ def list_clusters(group_id):
     permission = ViewResultsPermission(group.project_id)
     if permission.can():
         page = request.args.get('page', 1, type=int)
-        filter_form = FilterForm(request.args, csrf_enabled=False)
+        filter_form = FilterForm(request.args, meta={'csrf': False})
         filter_form.select_label.query = Cluster.query.filter_by(cg_id=group_id).distinct(Cluster.label)
         q = Cluster.query.filter(Cluster.cg_id == group_id)
         if filter_form.validate():

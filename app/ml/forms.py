@@ -5,16 +5,6 @@ from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 
 
-def iteration_text(row):
-    return row.model.name + ': ' + str(row.updated)
-
-class FilterForm(FlaskForm):
-    model_iteration = QuerySelectField('Model:', get_label=iteration_text, validators=[Optional()], allow_blank=False)
-    predicted_label = QuerySelectField('Predicted label:', validators=[Optional()], allow_blank=True, blank_text='(All)')
-    threshold = FloatField('Threshold:', validators=[Optional(), NumberRange(min=0, max=1)])
-    submit_button = SubmitField('Filter results')
-
-
 class UploadForm(FlaskForm):
     upload = FileField('Predictions CSV File', validators=[
         FileRequired(), FileAllowed(['csv'], 'CSV files only!')
@@ -50,3 +40,8 @@ class EditModelForm(FlaskForm):
 class EditIterationForm(FlaskForm):
     notes = StringField()
     submit_button = SubmitField('Save')
+
+
+class UseTrainingClipsForm(FlaskForm):
+    use = SubmitField('Use')
+    do_not_use = SubmitField('Do not use')
