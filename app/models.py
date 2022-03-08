@@ -91,7 +91,7 @@ class Equipment(db.Model):
     type = db.relationship('EquipmentType')
     manufacturer = db.Column(db.String(255))
     model = db.Column(db.String(255))
-    serial_number = db.Column(db.String(255), unique=True)
+    serial_number = db.Column(db.String(255))
     deployed = db.Column(db.DateTime)
     removed = db.Column(db.DateTime)
     notes = db.Column(db.String(255))
@@ -103,8 +103,8 @@ class Equipment(db.Model):
 class AudioFile(db.Model):
     __tablename__ = 'audio_files'
     id = db.Column(db.Integer, primary_key=True, nullable=False)
-    sn = db.Column(db.String(255), db.ForeignKey(Equipment.serial_number), nullable=False)
-    recording_device = db.relationship('Equipment')
+    sn = db.Column(db.String(255))
+    recording_device = db.relationship('Equipment', foreign_keys=[sn], primaryjoin='Equipment.serial_number == AudioFile.sn')
     timestamp = db.Column(db.DateTime)
     path = db.Column(db.String(255))
     name = db.Column(db.String(255), unique=True)
