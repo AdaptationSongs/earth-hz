@@ -1,4 +1,3 @@
-import dash
 from flask import Flask, request, current_app
 from flask.helpers import get_root_path
 from flask.json import JSONEncoder
@@ -6,13 +5,15 @@ from datetime import date
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
-from flask_login import LoginManager, login_required
+from flask_login import LoginManager
 from flask_session import Session
 from flask_bootstrap import Bootstrap
 from flask_admin import Admin
 from flask_principal import Principal, identity_loaded
 import flask_excel as excel
 from config import Config
+from dash_app import register_dashapps
+
 
 db = SQLAlchemy()
 ma = Marshmallow()
@@ -97,35 +98,4 @@ def register_blueprints(app):
     app.register_blueprint(results_dash_bp, url_prefix='/visualize')
 
 
-def register_dashapps(app):
-    from app.results_dash.layout import layout
-    from app.results_dash.callbacks import register_callbacks
-
-    # Meta tags for viewport responsiveness
-    meta_viewport = {"name": "viewport", "content": "width=device-width, initial-scale=1, shrink-to-fit=no"}
-
-    results_dash = dash.Dash(__name__,
-                         server=app,
-                         url_base_pathname='/results_dash/',
-                         assets_folder=get_root_path(__name__) + '/results_dash/assets/',
-                         meta_tags=[meta_viewport],
-                         external_stylesheets=['https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css']
-                   )
-
-    with app.app_context():
-        results_dash.title = 'Results Dashboard'
-        results_dash.layout = layout
-        register_callbacks(results_dash)
-
-    _protect_dashviews(results_dash)
-
-
-def _protect_dashviews(dashapp):
-    for view_func in dashapp.server.view_functions:
-        if view_func.startswith(dashapp.config.url_base_pathname):
-            dashapp.server.view_functions[view_func] = login_required(dashapp.server.view_functions[view_func])
-
-
-
 from app import models
-
