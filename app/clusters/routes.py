@@ -38,7 +38,8 @@ def list_clusters(group_id):
         if filter_form.validate():
             if filter_form.select_label.data:
                 q = q.filter(Cluster.label == filter_form.select_label.data.label)
-        clusters = q.distinct(Cluster.cluster_name).order_by(Cluster.cluster_name).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
+        per_page = filter_form.per_page.data or current_app.config['ITEMS_PER_PAGE']
+        clusters = q.distinct(Cluster.cluster_name).order_by(Cluster.cluster_name).paginate(page, per_page, False)
         return render_template('clusters/cluster_list.html', title='Sound clusters in group', clusters=clusters, group=group, filter_form=filter_form)
     # permission denied
     abort(403)
@@ -51,13 +52,14 @@ def view_cluster(group_id, cluster_name):
     permission = ViewResultsPermission(group.project_id)
     if permission.can():
         page = request.args.get('page', 1, type=int)
-        filter_form = FilterForm(request.args)
+        filter_form = FilterForm(request.args, meta={'csrf': False})
         filter_form.select_label.query = Cluster.query.filter_by(cg_id=group_id, cluster_name=cluster_name).distinct(Cluster.label)
         q = Cluster.query.filter(Cluster.cg_id == group_id).filter(Cluster.cluster_name == cluster_name)
         if filter_form.validate():
             if filter_form.select_label.data:
                 q = q.filter(Cluster.label == filter_form.select_label.data.label)
-        clips = q.join(AudioFile).order_by(AudioFile.timestamp).order_by(Cluster.start).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
+        per_page = filter_form.per_page.data or current_app.config['ITEMS_PER_PAGE']
+        clips = q.join(AudioFile).order_by(AudioFile.timestamp).order_by(Cluster.start).paginate(page, per_page, False)
         cluster_schema = ClusterSchema(many=True)
         clips_json = cluster_schema.dumps(clips.items)
         return render_template('clusters/cluster_view.html', title='Selections in sound cluster', clips=clips, clips_json=clips_json, group=group, cluster_name=cluster_name, filter_form=filter_form)

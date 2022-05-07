@@ -11,6 +11,7 @@ def manual_id(row):
 
 class FilterForm(FlaskForm):
     select_label = QuerySelectField('Manual ID:', get_label=manual_id, get_pk=manual_id, validators=[Optional()], allow_blank=True, blank_text='(All)')
+    per_page = SelectField('Per page:', choices=[(10, '10 per page'), (25, '25 per page'), (50, '50 per page'), (100, '100 per page')], default=10, validators=[Optional()], coerce=int)
     submit_button = SubmitField('Filter results')
 
 

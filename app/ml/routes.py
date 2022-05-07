@@ -425,18 +425,21 @@ def iteration_clips(iteration_id):
     if permission.can() and labeling and use_form.validate_on_submit():
         training_clips_q = TrainingClip.query.join(LabeledClip).filter(TrainingClip.iteration_id == iteration.id)
         if use_form.use.data:
-            selected_clips = q.filter(LabeledClip.id.notin_(training_clips_q.with_entities(LabeledClip.id)))
+            selected_clips = q.filter(LabeledClip.id.notin_(training_clips_q.with_entities(LabeledClip.id))).all()
             for clip in selected_clips:
                 training_clip = TrainingClip(iteration_id=iteration.id, labeled_clip_id=clip.id)
                 db.session.add(training_clip)
+            flash('Using {n} clips for training'.format(n=len(selected_clips)))
         if use_form.do_not_use.data:
-            selected_clips = training_clips_q.filter(LabeledClip.id.in_(q.with_entities(LabeledClip.id)))
+            selected_clips = training_clips_q.filter(LabeledClip.id.in_(q.with_entities(LabeledClip.id))).all()
             for training_clip in selected_clips:
                 db.session.delete(training_clip)
+            flash('Stopped using {n} clips for training'.format(n=len(selected_clips)))
         db.session.commit()
+        return redirect(url_for('ml.view_iteration', iteration_id=iteration_id))
     clips_count = q.count()
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', current_app.config['ITEMS_PER_PAGE'], type=int)
+    per_page = filter_form.per_page.data or current_app.config['ITEMS_PER_PAGE']
     clips = q.paginate(page, per_page, False)
     return render_template('ml/iteration_clips.html', title='Labeled Clips', filter_form=filter_form, use_form=use_form, clips_count=clips_count, clips=clips, iteration=iteration, labeling=labeling)
 

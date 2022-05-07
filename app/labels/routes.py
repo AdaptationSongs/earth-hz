@@ -35,7 +35,8 @@ def list_labels(project_id=None):
                 q = q.filter(LabeledClip.certain == True)
             if filter_form.certain.data == '0':
                 q = q.filter(LabeledClip.certain == False)
-        clips = q.order_by(AudioFile.timestamp).order_by(LabeledClip.offset).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
+        per_page = filter_form.per_page.data or current_app.config['ITEMS_PER_PAGE']
+        clips = q.order_by(AudioFile.timestamp).order_by(LabeledClip.offset).paginate(page, per_page, False)
         return render_template('labels/label_list.html', title='Labels', clips=clips, project_id=project_id, filter_form=filter_form)
     # permission denied
     abort(403)

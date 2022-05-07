@@ -6,7 +6,8 @@ from wtforms.ext.sqlalchemy.fields import QuerySelectField
 
 class FilterForm(FlaskForm):
     select_label = QuerySelectField('Label:', validators=[Optional()], allow_blank=True, blank_text='(All)')
-    certain = SelectField('Certain:', choices=[('', 'Any'), ('0', 'Maybe'), ('1', 'Definitely')], default='1', validators=[Optional()])
+    certain = SelectField('Certain:', choices=[('', '(All)'), ('0', 'Maybe'), ('1', 'Definitely')], default='1', validators=[Optional()])
+    per_page = SelectField('Per page:', choices=[(10, '10 per page'), (25, '25 per page'), (50, '50 per page'), (100, '100 per page')], default=10, validators=[Optional()], coerce=int)
     submit_button = SubmitField('Filter results')
 
 
