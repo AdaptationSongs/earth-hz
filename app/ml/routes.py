@@ -126,8 +126,7 @@ def new_model(project_id):
 @login_required
 def edit_model(model_id):
     model = MLModel.query.get(model_id)
-    project_id = model.project_id
-    permission = ManageLabelsPermission(project_id)
+    permission = ManageLabelsPermission(model.project_id)
     if permission.can():
         form = EditModelForm()
         if form.validate_on_submit():
@@ -139,8 +138,7 @@ def edit_model(model_id):
             return redirect(url_for('ml.list_models', project_id=project_id))
         form.name.data = model.name
         form.description.data = model.description
-        project = Project.query.get(project_id)
-        return render_template('ml/model_edit.html', title='Edit Model', form=form, project=project)
+        return render_template('ml/model_edit.html', title='Edit Model', form=form, model=model, project=model.project)
     # permission denied
     abort(403)
 
@@ -149,14 +147,12 @@ def edit_model(model_id):
 @login_required
 def list_iterations(model_id):
     model = MLModel.query.get(model_id)
-    project_id = model.project_id
-    permission = ManageLabelsPermission(project_id)
+    permission = ManageLabelsPermission(model.project_id)
     if permission.can():
         page = request.args.get('page', 1, type=int)
         q = model.iterations.order_by(ModelIteration.updated.desc())
         iterations = q.paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-        project = Project.query.get(project_id)
-        return render_template('ml/iteration_list.html', title='Model Iterations', iterations=iterations, model=model, project=project)
+        return render_template('ml/iteration_list.html', title='Model Iterations', iterations=iterations, model=model, project=model.project)
     # permission denied
     abort(403)
 
@@ -165,8 +161,8 @@ def list_iterations(model_id):
 @login_required
 def view_iteration(iteration_id):
     iteration = ModelIteration.query.get(iteration_id)
-    project_id = iteration.model.project_id
-    permission = ManageLabelsPermission(project_id)
+    model = iteration.model
+    permission = ManageLabelsPermission(model.project_id)
     if permission.can():
         page = request.args.get('page', 1, type=int)
         q = ModelLabel.query.filter(ModelLabel.iteration_id == iteration_id).join(Label, ModelLabel.label_id == Label.id).join(LabelType).filter(LabelType.parent_type == None).order_by(Label.name)
@@ -185,7 +181,7 @@ def view_iteration(iteration_id):
         else:
             next_form = None
         finished = (iteration.status == StatusEnum.finished)
-        return render_template('ml/iteration_view.html', title='Model Iteration Labels', labels=labels, iteration=iteration, finished=finished, delete_form=delete_form, previous_form=previous_form, next_form=next_form)
+        return render_template('ml/iteration_view.html', title='Model Iteration Labels', labels=labels, iteration=iteration, model=model, project=model.project, finished=finished, delete_form=delete_form, previous_form=previous_form, next_form=next_form)
     # permission denied
     abort(403)
 
@@ -196,29 +192,25 @@ def view_errors(model_label_id):
     model_label = ModelLabel.query.get(model_label_id)
     iteration = model_label.iteration
     model = iteration.model
-    project_id = model.project_id
-    permission = ManageLabelsPermission(project_id)
+    permission = ManageLabelsPermission(model.project_id)
     if permission.can():
         page = request.args.get('page', 1, type=int)
         errors = model_label.training_errors.paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-        project = Project.query.get(project_id)
-        return render_template('ml/training_errors.html', title='Training Errors', errors=errors, model_label=model_label, iteration=iteration, model=model, project=project)
+        return render_template('ml/training_errors.html', title='Training Errors', errors=errors, model_label=model_label, iteration=iteration, model=model, project=model.project)
 
 
 @bp.route('/iteration/<iteration_id>/add_label')
 @login_required
 def add_label(iteration_id):
     iteration = ModelIteration.query.get(iteration_id)
-    model_id = iteration.model_id
-    model = MLModel.query.get(model_id)
-    project_id = model.project_id
-    permission = ManageLabelsPermission(project_id)
+    model = iteration.model
+    permission = ManageLabelsPermission(model.project_id)
     if permission.can():
+        project = model.project
         page = request.args.get('page', 1, type=int)
         subq = ModelLabel.query.filter(ModelLabel.iteration_id == iteration_id).with_entities(ModelLabel.label_id).subquery()
-        q = ProjectLabel.query.filter(ProjectLabel.project_id == project_id).join(Label).join(LabelType).filter(LabelType.parent_type == None).filter(ProjectLabel.label_id.notin_(subq))
+        q = ProjectLabel.query.filter(ProjectLabel.project == project).join(Label).join(LabelType).filter(LabelType.parent_type == None).filter(ProjectLabel.label_id.notin_(subq))
         labels = q.paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-        project = Project.query.get(project_id)
         return render_template('ml/unused_labels.html', title='Unused Labels', labels=labels, iteration=iteration, model=model, project=project)
     # permission denied
     abort(403)
@@ -228,10 +220,8 @@ def add_label(iteration_id):
 @login_required
 def edit_label(iteration_id, label_id):
     iteration = ModelIteration.query.get(iteration_id)
-    model_id = iteration.model_id
-    model = MLModel.query.get(model_id)
-    project_id = model.project_id
-    permission = ManageLabelsPermission(project_id)
+    model = iteration.model
+    permission = ManageLabelsPermission(model.project_id)
     if permission.can() and iteration.status == StatusEnum.labeling:
         model_label = ModelLabel.query.filter(ModelLabel.label_id == label_id).filter(ModelLabel.iteration_id == iteration_id).first()
         if model_label:
@@ -254,8 +244,7 @@ def edit_label(iteration_id, label_id):
             db.session.commit()
             flash(change + ' ' + label.name)
             return redirect(url_for('ml.iteration_clips', iteration_id=iteration_id, select_label=label_id))
-        project = Project.query.get(project_id)
-        return render_template('ml/label_edit.html', title='Add/Edit Label', form=form, iteration=iteration, model=model, project=project, label=label)
+        return render_template('ml/label_edit.html', title='Add/Edit Label', form=form, iteration=iteration, model=model, project=model.project, label=label)
     # permission denied
     abort(403)
 
@@ -264,10 +253,7 @@ def edit_label(iteration_id, label_id):
 @login_required
 def delete_label(iteration_id, label_id):
     iteration = ModelIteration.query.get(iteration_id)
-    model_id = iteration.model_id
-    model = MLModel.query.get(model_id)
-    project_id = model.project_id
-    permission = ManageLabelsPermission(project_id)
+    permission = ManageLabelsPermission(iteration.model.project_id)
     if permission.can() and iteration.status == StatusEnum.labeling:
         model_label = ModelLabel.query.filter(ModelLabel.label_id == label_id).filter(ModelLabel.iteration_id == iteration_id).first()
         label = Label.query.get(label_id)
@@ -285,10 +271,7 @@ def delete_label(iteration_id, label_id):
 @login_required
 def previous_status(iteration_id):
     iteration = ModelIteration.query.get(iteration_id)
-    model_id = iteration.model_id
-    model = MLModel.query.get(model_id)
-    project_id = model.project_id
-    permission = ManageLabelsPermission(project_id)
+    permission = ManageLabelsPermission(iteration.model.project_id)
     if permission.can():
         previous_status = iteration.previous_status()
         if next_status:
@@ -308,10 +291,7 @@ def previous_status(iteration_id):
 @login_required
 def next_status(iteration_id):
     iteration = ModelIteration.query.get(iteration_id)
-    model_id = iteration.model_id
-    model = MLModel.query.get(model_id)
-    project_id = model.project_id
-    permission = ManageLabelsPermission(project_id)
+    permission = ManageLabelsPermission(iteration.model.project_id)
     if permission.can():
         next_status = iteration.next_status()
         if next_status:
@@ -331,10 +311,8 @@ def next_status(iteration_id):
 @login_required
 def edit_iteration(iteration_id):
     iteration = ModelIteration.query.get(iteration_id)
-    model_id = iteration.model_id
-    model = MLModel.query.get(model_id)
-    project_id = model.project_id
-    permission = ManageLabelsPermission(project_id)
+    model = iteration.model
+    permission = ManageLabelsPermission(model.project_id)
     if permission.can():
         form = EditIterationForm()
         if form.validate_on_submit():
@@ -345,8 +323,7 @@ def edit_iteration(iteration_id):
             flash('Notes updated')
             return redirect(url_for('ml.view_iteration', iteration_id=iteration_id))
         form.notes.data = iteration.description
-        project = Project.query.get(project_id)
-        return render_template('ml/iteration_edit.html', title='Edit Iteration', form=form, iteration=iteration, model=model, project=project)
+        return render_template('ml/iteration_edit.html', title='Edit Iteration', form=form, iteration=iteration, model=model, project=model.project)
     # permission denied
     abort(403)
 
@@ -355,8 +332,7 @@ def edit_iteration(iteration_id):
 @login_required
 def new_iteration(model_id):
     model = MLModel.query.get(model_id)
-    project_id = model.project_id
-    permission = ManageLabelsPermission(project_id)
+    permission = ManageLabelsPermission(model.project_id)
     if permission.can():
         form = EditIterationForm()
         if form.validate_on_submit():
@@ -367,8 +343,7 @@ def new_iteration(model_id):
             db.session.commit()
             flash('New iteration created')
             return redirect(url_for('ml.view_iteration', iteration_id=iteration.id))
-        project = Project.query.get(project_id)
-        return render_template('ml/iteration_new.html', title='New Iteration', form=form, model=model, project=project)
+        return render_template('ml/iteration_new.html', title='New Iteration', form=form, model=model, project=model.project)
     # permission denied
     abort(403)
 
@@ -377,10 +352,8 @@ def new_iteration(model_id):
 @login_required
 def copy_iteration(iteration_id):
     iteration = ModelIteration.query.get(iteration_id)
-    model_id = iteration.model_id
-    model = MLModel.query.get(model_id)
-    project_id = model.project_id
-    permission = ManageLabelsPermission(project_id)
+    model = iteration.model
+    permission = ManageLabelsPermission(model.project_id)
     if permission.can():
         form = EditIterationForm()
         if form.validate_on_submit():
@@ -399,8 +372,7 @@ def copy_iteration(iteration_id):
             flash('New iteration created')
             return redirect(url_for('ml.view_iteration', iteration_id=new_iteration.id))
         form.notes.data = iteration.description
-        project = Project.query.get(project_id)
-        return render_template('ml/iteration_copy.html', title='Copy Iteration', form=form, iteration=iteration, model=model, project=project)
+        return render_template('ml/iteration_copy.html', title='Copy Iteration', form=form, iteration=iteration, model=model, project=model.project)
     # permission denied
     abort(403)
 
@@ -441,7 +413,7 @@ def iteration_clips(iteration_id):
     page = request.args.get('page', 1, type=int)
     per_page = filter_form.per_page.data or current_app.config['ITEMS_PER_PAGE']
     clips = q.paginate(page, per_page, False)
-    return render_template('ml/iteration_clips.html', title='Labeled Clips', filter_form=filter_form, use_form=use_form, clips_count=clips_count, clips=clips, iteration=iteration, labeling=labeling)
+    return render_template('ml/iteration_clips.html', title='Labeled Clips', filter_form=filter_form, use_form=use_form, clips_count=clips_count, clips=clips, iteration=iteration, model=iteration.model, project=project, labeling=labeling)
 
 
 @bp.route('/project/<project_id>/upload_single_label', methods=['GET', 'POST'])

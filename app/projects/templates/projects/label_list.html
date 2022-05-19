@@ -1,13 +1,11 @@
-{% extends 'base.html' %}
-{% from 'bootstrap/pagination.html' import render_pagination %}
+{% extends 'projects/overview.html' %}
+
+{% block breadcrumbs %}
+  {{ super() }}
+  {{ render_breadcrumb_item('projects.list_labels', 'Project Labels', project_id=project.id) }}
+{% endblock %}
 
 {% block app_content %}
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=project.id) }}">{{ project.name }}</a></li>
-      <li class="breadcrumb-item active">Project Labels</li>
-    </ol>
-  </nav>
   <div class="row">
     <div class="col">
       <h2>Project Labels</h2>
@@ -25,7 +23,7 @@
 {% endblock %}
 
 {% block scripts %}
-  {{super()}}
+  {{ super() }}
   <script>
     const list_props = {
       project_id: {{ project.id }},

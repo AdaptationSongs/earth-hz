@@ -1,6 +1,15 @@
-{% extends 'audio-player.html' %}
-{% from 'bootstrap/form.html' import render_form %}
-{% from 'bootstrap/pagination.html' import render_pagination %}
+{% extends 'projects/overview.html' %}
+
+{% block navbar %}
+  {{ super() }}
+  {% include 'audio-player.html' %}
+{% endblock %}
+
+{% block breadcrumbs %}
+  {{ super() }}
+  {{ render_breadcrumb_item('labels.list_labels', 'Labels', project_id=project.id) }}
+{% endblock %}
+
 
 {% block app_content %}
     {{ render_form(filter_form, method='get', form_type='inline') }}
@@ -26,6 +35,6 @@
 
     {{ render_pagination(clips) }}
     <h4>Export data:</h4>
-    <p><a class="btn btn-primary" href="{{ url_for('labels.export_csv', project_id=project_id) }}">Download as CSV</a></p>
+    <p><a class="btn btn-primary" href="{{ url_for('labels.export_csv', project_id=project.id) }}">Download as CSV</a></p>
 {% endblock %}
 

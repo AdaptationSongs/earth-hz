@@ -1,5 +1,10 @@
-{% extends 'audio-player.html' %}
-{% from 'bootstrap/form.html' import render_form %}
+{% extends 'labels/label_list.html' %}
+
+{% block breadcrumbs %}
+  {{ super() }}
+  {{ render_breadcrumb_item('labels.view_clip', 'Add/edit') }}
+{% endblock %}
+
 
 {% block app_content %}
     <div class="row">

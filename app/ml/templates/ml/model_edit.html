@@ -1,14 +1,11 @@
-{% extends 'base.html' %}
-{% from 'bootstrap/form.html' import render_form %}
+{% extends 'ml/iteration_list.html' %}
+
+{% block breadcrumbs %}
+  {{ super() }}
+  {{ render_breadcrumb_item('ml.edit_model', 'Edit', model_id=model.id) }}
+{% endblock %}
 
 {% block app_content %}
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=project.id) }}">{{ project.name }}</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_models', project_id=project.id) }}">Machine Learning Models</a></li>
-      <li class="breadcrumb-item active">{{ title }}</li>
-    </ol>
-  </nav>
   <h3>{{ title }}</h3>
   {{ render_form(form) }}
 {% endblock %}

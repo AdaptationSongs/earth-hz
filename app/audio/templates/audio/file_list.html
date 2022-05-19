@@ -1,6 +1,14 @@
-{% extends 'audio-player.html' %}
-{% from 'bootstrap/form.html' import render_form %}
-{% from 'bootstrap/pagination.html' import render_pagination %}
+{% extends 'projects/overview.html' %}
+
+{% block navbar %}
+  {{ super() }}
+  {% include 'audio-player.html' %}
+{% endblock %}
+
+{% block breadcrumbs %}
+  {{ super() }}
+  {{ render_breadcrumb_item('audio.list_files', 'Listen', project_id=project.id) }}
+{% endblock %}
 
 {% block app_content %}
     <div class="row h-100">
@@ -77,7 +85,7 @@
             var send = {
                 station: dropdown.station.val()
             };
-            $.getJSON("{{ url_for('audio._get_date_range', project_id=project_id) }}", send, function(data) {
+            $.getJSON("{{ url_for('audio._get_date_range', project_id=project.id) }}", send, function(data) {
                 datepicker.after.attr('min', data.first);
                 datepicker.after.attr('max', data.last);
                 datepicker.after.val(data.first);

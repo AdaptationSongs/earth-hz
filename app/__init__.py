@@ -7,7 +7,7 @@ from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_session import Session
-from flask_bootstrap import Bootstrap
+from flask_bootstrap import Bootstrap5
 from flask_admin import Admin
 from flask_principal import Principal, identity_loaded
 import flask_excel as excel
@@ -20,7 +20,7 @@ ma = Marshmallow()
 migrate = Migrate()
 login = LoginManager()
 sess = Session()
-bootstrap = Bootstrap()
+bootstrap = Bootstrap5()
 admin = Admin()
 principal = Principal() 
 

@@ -1,60 +1,63 @@
 {% extends 'bootstrap.html' %}
-{% from 'bootstrap/nav.html' import render_nav_item %}
-{% from 'bootstrap/utils.html' import render_messages %}
 
 {% block styles %}
-    {{ super() }}
-    <link rel="stylesheet" href="/static/styles.css">
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 {% endblock %}
 
 {% block title %}
-    {% if title %}
-        {{ title }} - Earth Hz
-    {% else %}
-        Welcome to Earth Hz
-    {% endif %}
+  {% if title %}
+    {{ title }} - Earth Hz
+  {% else %}
+    Welcome to Earth Hz
+  {% endif %}
 {% endblock %}
 
 {% block navbar %}
-    <a class="skip-link sr-only sr-only-focusable" href="#content">Skip to content</a>
-    <nav class="navbar navbar-expand-md navbar-light bg-light">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">Earth Hz</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div id="navbarNavDropdown" class="collapse navbar-collapse">
-                {{ render_nav_item('projects.list', 'Projects') }}
-                {% if current_user.is_authenticated and current_user.admin %}
-                    {{ render_nav_item('admin.index', 'Admin') }}
-                {% endif %}
-                {% if current_user.is_authenticated %}
-                    {{ render_nav_item('user_views.logout', 'Log out') }}
-                {% else %}
-                    {{ render_nav_item('user_views.login', 'Log in') }}
-                {% endif %}
-            </div>
-        </div><!-- .container -->
-    </nav><!-- .site-navigation -->
+  <a class="skip-link visually-hidden-focusable" href="#content">Skip to content</a>
+  <nav class="navbar navbar-expand-md navbar-light bg-light">
+    <div class="container">
+      <a class="navbar-brand" href="{{ url_for('main.index') }}">Earth Hz</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="navbarNavDropdown" class="collapse navbar-collapse">
+        {{ render_nav_item('projects.list', 'Projects') }}
+        {% if current_user.is_authenticated and current_user.admin %}
+          {{ render_nav_item('admin.index', 'Admin') }}
+        {% endif %}
+        {% if current_user.is_authenticated %}
+          {{ render_nav_item('user_views.logout', 'Log out') }}
+        {% else %}
+          {{ render_nav_item('user_views.login', 'Log in') }}
+        {% endif %}
+      </div>
+    </div><!-- .container -->
+  </nav><!-- .site-navigation -->
 {% endblock %}
 
 {% block content %}
-    <div id="content" class="container h-100">
-        {{ render_messages() }}
-        {% block app_content %}{% endblock %}
-    </div>
+  <div id="content" class="container h-100">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        {% block breadcrumbs %}{% endblock %}
+      </ol>
+    </nav>
+    {{ render_messages() }}
+    {% block app_content %}{% endblock %}
+  </div>
 {% endblock %}
 
 {% block scripts %}
-    {{ super() }}
-    {% if config.DEBUG %}
-        <script src="https://unpkg.com/react/umd/react.development.js" crossorigin></script>
-        <script src="https://unpkg.com/react-dom/umd/react-dom.development.js" crossorigin></script>
-        <script src="https://unpkg.com/react-bootstrap@next/dist/react-bootstrap.js" crossorigin></script>
-    {% else %}
-        <script src="https://unpkg.com/react/umd/react.production.min.js" crossorigin></script>
-        <script src="https://unpkg.com/react-dom/umd/react-dom.production.min.js" crossorigin></script>
-        <script src="https://unpkg.com/react-bootstrap@next/dist/react-bootstrap.min.js" crossorigin></script>
-    {% endif %}
-    <script src="{{ url_for('static', filename='dist/components.js') }}"></script>
+  {{ super() }}
+  {% if config.DEBUG %}
+    <script src="https://unpkg.com/react/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-bootstrap@next/dist/react-bootstrap.js" crossorigin></script>
+  {% else %}
+    <script src="https://unpkg.com/react/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-bootstrap@next/dist/react-bootstrap.min.js" crossorigin></script>
+  {% endif %}
+  <script src="{{ url_for('static', filename='dist/components.js') }}"></script>
 {% endblock %}

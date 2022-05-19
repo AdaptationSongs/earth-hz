@@ -40,7 +40,7 @@ def list_clusters(group_id):
                 q = q.filter(Cluster.label == filter_form.select_label.data.label)
         per_page = filter_form.per_page.data or current_app.config['ITEMS_PER_PAGE']
         clusters = q.distinct(Cluster.cluster_name).order_by(Cluster.cluster_name).paginate(page, per_page, False)
-        return render_template('clusters/cluster_list.html', title='Sound clusters in group', clusters=clusters, group=group, filter_form=filter_form)
+        return render_template('clusters/cluster_list.html', title='Sound clusters in group', clusters=clusters, group=group, project=group.project, filter_form=filter_form)
     # permission denied
     abort(403)
 
@@ -62,7 +62,7 @@ def view_cluster(group_id, cluster_name):
         clips = q.join(AudioFile).order_by(AudioFile.timestamp).order_by(Cluster.start).paginate(page, per_page, False)
         cluster_schema = ClusterSchema(many=True)
         clips_json = cluster_schema.dumps(clips.items)
-        return render_template('clusters/cluster_view.html', title='Selections in sound cluster', clips=clips, clips_json=clips_json, group=group, cluster_name=cluster_name, filter_form=filter_form)
+        return render_template('clusters/cluster_view.html', title='Selections in sound cluster', clips=clips, clips_json=clips_json, group=group, project=group.project, cluster_name=cluster_name, filter_form=filter_form)
     # permission denied
     abort(403)
 
@@ -85,7 +85,7 @@ def upload(project_id):
             import_df['cg_id'] = cg.id
             import_df.to_sql('clusters', con=db.engine, index=False, if_exists='append')
             return redirect(url_for('clusters.cluster_groups', project_id=project_id))
-        return render_template('clusters/upload.html', title="Upload cluster file", form=form, project_id=project_id)
+        return render_template('clusters/upload.html', title="Upload cluster file", form=form, project=current_project)
     # permission denied
     abort(403)
 

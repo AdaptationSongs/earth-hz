@@ -1,5 +1,9 @@
-{% extends "base.html" %}
-{% from 'bootstrap/form.html' import render_form %}
+{% extends "clusters/cluster_groups.html" %}
+
+{% block breadcrumbs %}
+  {{ super() }}
+  {{ render_breadcrumb_item('clusters.upload', 'Upload') }}
+{% endblock %}
 
 {% block app_content %}
     {{ render_form(form) }}

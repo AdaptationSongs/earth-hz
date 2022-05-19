@@ -1,23 +1,21 @@
-{% extends 'audio-player.html' %}
-{% from 'bootstrap/form.html' import render_form %}
-{% from 'bootstrap/pagination.html' import render_pagination %}
+{% extends 'ml/iteration_view.html' %}
 
+{% block navbar %}
+  {{ super() }}
+  {% include 'audio-player.html' %}
+{% endblock %}
+
+{% block breadcrumbs %}
+  {{ super() }}
+  {{ render_breadcrumb_item('ml.iteration_clips', 'Labeled clips', iteration_id=iteration.id) }}
+{% endblock %}
 
 {% block app_content %}
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=iteration.model.project.id) }}">{{ iteration.model.project.name }}</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_models', project_id=iteration.model.project.id) }}">Machine Learning Models</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_iterations', model_id=iteration.model.id) }}">{{ iteration.model.name }}</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('ml.view_iteration', iteration_id=iteration.id) }}">{{ iteration.updated }}</a></li>
-      <li class="breadcrumb-item active">Labeled clips</li>
-    </ol>
-  </nav>
   {{ render_form(filter_form, method='get', form_type='inline') }}
   {% if labeling %}
-    <p>
-      {{ render_form(use_form, method='post', form_type='inline', extra_classes='d-inline-block', button_map={'use': 'success', 'do_not_use': 'danger'}) }} these {{ clips_count }} clips for training
-    </p>
+    <div>
+      {{ render_form(use_form, method='post', form_type='inline', extra_classes='d-inline-block', button_map={'use': 'success', 'do_not_use': 'danger'}) }} <span class="ps-2">these {{ clips_count }} clips for training</span>
+    </div>
   {% endif %}
   {% for clip in clips.items %}
     <div class="card mt-3 mb-3">

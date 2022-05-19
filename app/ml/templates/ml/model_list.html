@@ -1,13 +1,11 @@
-{% extends 'base.html' %}
-{% from 'bootstrap/pagination.html' import render_pagination %}
+{% extends 'projects/overview.html' %}
+
+{% block breadcrumbs %}
+  {{ super() }}
+  {{ render_breadcrumb_item('ml.list_models', 'Machine Learning Models', project_id=project.id) }}
+{% endblock %}
 
 {% block app_content %}
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=project.id) }}">{{ project.name }}</a></li>
-      <li class="breadcrumb-item active">Machine Learning Models</li>
-    </ol>
-  </nav>
   <h3>Models</h3>
   <a class= "btn btn-primary" href="{{ url_for('ml.new_model', project_id=project.id) }}">New model</a>
   <table class="table">

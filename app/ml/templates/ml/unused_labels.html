@@ -1,16 +1,11 @@
-{% extends 'base.html' %}
-{% from 'bootstrap/pagination.html' import render_pagination %}
+{% extends 'ml/iteration_view.html' %}
+
+{% block breadcrumbs %}
+  {{ super() }}
+  {{ render_breadcrumb_item('ml.add_label', 'Add Label') }}
+{% endblock %}
 
 {% block app_content %}
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=project.id) }}">{{ project.name }}</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_models', project_id=project.id) }}">Machine Learning Models</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_iterations', model_id=model.id) }}">{{ model.name }}</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('ml.view_iteration', iteration_id=iteration.id) }}">{{ iteration.updated }}</a></li>
-      <li class="breadcrumb-item active">Add Label</li>
-    </ol>
-  </nav>
   <h3>Unused labels</h3>
   <table class="table">
     <th>Label</th>

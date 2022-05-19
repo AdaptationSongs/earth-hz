@@ -1,16 +1,11 @@
-{% extends 'base.html' %}
-{% from 'bootstrap/pagination.html' import render_pagination %}
-{% from 'bootstrap/form.html' import render_form %}
+{% extends 'ml/iteration_list.html' %}
+
+{% block breadcrumbs %}
+  {{ super() }}
+  {{ render_breadcrumb_item('ml.view_iteration', iteration.updated, iteration_id=iteration.id) }}
+{% endblock %}
 
 {% block app_content %}
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=iteration.model.project.id) }}">{{ iteration.model.project.name }}</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_models', project_id=iteration.model.project.id) }}">Machine Learning Models</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('ml.list_iterations', model_id=iteration.model.id) }}">{{ iteration.model.name }}</a></li>
-      <li class="breadcrumb-item active">{{ iteration.updated }}</li>
-    </ol>
-  </nav>
   <h2>Model Iteration {{ iteration.updated }}</h2>
   <div class="row">
     <div class="col">

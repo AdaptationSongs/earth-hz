@@ -1,20 +1,21 @@
-{% extends 'audio-player.html' %}
-{% from 'bootstrap/form.html' import render_form %}
-{% from 'bootstrap/pagination.html' import render_pagination %}
+{% extends 'projects/overview.html' %}
 
 {% block styles %}
     {{ super() }}
     <link rel="stylesheet" href="{{ url_for('ml.static', filename='dist/filter-form.css') }}">
 {% endblock %}
 
-{% block app_content %}
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=project.id) }}">{{ project.name }}</a></li>
-      <li class="breadcrumb-item active">Machine Learning Output</li>
-    </ol>
-  </nav>
+{% block navbar %}
+  {{ super() }}
+  {% include 'audio-player.html' %}
+{% endblock %}
 
+{% block breadcrumbs %}
+  {{ super() }}
+  {{ render_breadcrumb_item('ml.list_outputs', 'Machine Learning Output', project_id=project.id) }}
+{% endblock %}
+
+{% block app_content %}
   <div id="filter-form"></div>
 
   <div id="clips-list"></div>

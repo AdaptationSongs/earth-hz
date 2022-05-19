@@ -37,7 +37,8 @@ def list_labels(project_id=None):
                 q = q.filter(LabeledClip.certain == False)
         per_page = filter_form.per_page.data or current_app.config['ITEMS_PER_PAGE']
         clips = q.order_by(AudioFile.timestamp).order_by(LabeledClip.offset).paginate(page, per_page, False)
-        return render_template('labels/label_list.html', title='Labels', clips=clips, project_id=project_id, filter_form=filter_form)
+        project = Project.query.get(project_id)
+        return render_template('labels/label_list.html', title='Labels', clips=clips, project=project, filter_form=filter_form)
     # permission denied
     abort(403)
 
@@ -81,7 +82,7 @@ def view_clip(file_name, offset):
     if view_permission.can():
         admin_permission = ManageLabelsPermission(project_id)
         labels = LabeledClip.query.filter_by(file_name=file_name, offset=offset).order_by(LabeledClip.modified.desc()).all()
-        return render_template('labels/view_clip.html',  title='Add/edit labels', delete_form=delete_form, form=form, labels=labels, wav_file=wav_file, offset=offset, station=station, admin=admin_permission.can())
+        return render_template('labels/view_clip.html',  title='Add/edit labels', delete_form=delete_form, form=form, labels=labels, wav_file=wav_file, offset=offset, station=station, project=station.project, admin=admin_permission.can())
     # permission denied
     abort(403)
 

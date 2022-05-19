@@ -1,18 +1,17 @@
-{% extends 'audio-player.html' %}
-{% from 'bootstrap/form.html' import render_form %}
-{% from 'bootstrap/pagination.html' import render_pagination %}
+{% extends 'clusters/cluster_list.html' %}
+
+{% block navbar %}
+  {{ super() }}
+  {% include 'audio-player.html' %}
+{% endblock %}
+
+{% block breadcrumbs %}
+  {{ super() }}
+  {{ render_breadcrumb_item('clusters.view_cluster', cluster_name, cluster_name=cluster_name) }}
+{% endblock %}
 
 {% block app_content %}
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=group.project.id) }}">{{ group.project.name }}</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('clusters.cluster_groups', project_id=group.project.id) }}">Cluster Groups</a></li>
-      <li class="breadcrumb-item"><a href="{{ url_for('clusters.list_clusters', group_id=group.id) }}">{{ group.name }}</a></li>
-      <li class="breadcrumb-item active">{{ cluster_name }}</li>
-    </ol>
-  </nav>
-
-  {{ render_form(filter_form, method='get', form_type='horizontal') }}
+  {{ render_form(filter_form, method='get', form_type='inline') }}
 
   <div id="clips-list"></div>
 

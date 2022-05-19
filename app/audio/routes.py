@@ -156,9 +156,10 @@ def list_files(project_id=None):
     if project_id:
         q = q.filter(MonitoringStation.project_id == project_id)
         fq = fq.filter(MonitoringStation.project_id == project_id)
+        project = Project.query.get(project_id)
     else:
         fq = fq.all()
-        project_id = None
+        project = None
     filter_form.select_station.query = fq
     if filter_form.validate():
         if filter_form.select_station.data:
@@ -172,7 +173,7 @@ def list_files(project_id=None):
         if filter_form.until_hour.data:
             q = q.filter(extract('hour', AudioFile.timestamp) < filter_form.until_hour.data) 
     files = q.order_by(AudioFile.timestamp).paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-    return render_template('audio/file_list.html', title='Browse all wav files', project_id=project_id, files=files, filter_form=filter_form)
+    return render_template('audio/file_list.html', title='Browse all wav files', project=project, files=files, filter_form=filter_form)
 
 
 @bp.route('/audio/_get_date_range')

@@ -3,7 +3,7 @@ alembic==1.4.1
 audioread==2.1.8
 azure-datalake-store==0.0.48
 blinker==1.4
-Bootstrap-Flask==1.2.0
+Bootstrap-Flask==2.0.2
 Brotli==1.0.7
 certifi==2019.11.28
 cffi==1.14.0

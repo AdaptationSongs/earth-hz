@@ -1,16 +1,11 @@
-{% extends "base.html" %}
-{% from 'bootstrap/form.html' import render_form %}
-{% from 'bootstrap/pagination.html' import render_pagination %}
+{% extends "projects/overview.html" %}
+
+{% block breadcrumbs %}
+  {{ super() }}
+  {{ render_breadcrumb_item('clusters.cluster_groups', 'Cluster Groups', project_id=project.id) }}
+{% endblock %}
 
 {% block app_content %}
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('projects.overview', project_id=project.id) }}">{{ project.name }}</a></li>
-      <li class="breadcrumb-item active">Cluster Groups</li>
-    </ol>
-  </nav>
-
-
     <a href="{{ url_for('clusters.upload', project_id=project.id) }}" class="btn btn-primary">Upload new clusters</a>
 
     {% for group in groups.items %}
