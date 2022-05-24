@@ -362,3 +362,4 @@ class TrainingError(db.Model):
     should_be = db.relationship('Label', foreign_keys=[should_be_id])
     came_out_id = db.Column(db.Integer, db.ForeignKey(Label.id), nullable=False)
     came_out = db.relationship('Label', foreign_keys=[came_out_id])
+    labeled_clip = db.relationship('LabeledClip', primaryjoin='and_(foreign(TrainingError.should_be_id) == LabeledClip.label_id, foreign(TrainingError.file_name) == LabeledClip.file_name, foreign(TrainingError.offset) == LabeledClip.offset)', uselist=False, viewonly=True)

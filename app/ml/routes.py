@@ -196,7 +196,8 @@ def view_errors(model_label_id):
     if permission.can():
         page = request.args.get('page', 1, type=int)
         errors = model_label.training_errors.paginate(page, current_app.config['ITEMS_PER_PAGE'], False)
-        return render_template('ml/training_errors.html', title='Training Errors', errors=errors, model_label=model_label, iteration=iteration, model=model, project=model.project)
+        labeling = (iteration.status == StatusEnum.labeling)
+        return render_template('ml/training_errors.html', title='Training Errors', errors=errors, model_label=model_label, iteration=iteration, model=model, project=model.project, labeling=labeling)
 
 
 @bp.route('/iteration/<iteration_id>/add_label')

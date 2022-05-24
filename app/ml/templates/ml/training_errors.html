@@ -1,5 +1,10 @@
 {% extends 'ml/iteration_view.html' %}
 
+{% block navbar %}
+  {{ super() }}
+  {% include 'audio-player.html' %}
+{% endblock %}
+
 {% block breadcrumbs %}
   {{ super() }}
   {{ render_breadcrumb_item('ml.view_errors', 'Training Errors') }}
@@ -7,23 +12,42 @@
 
 {% block app_content %}
   <h3>Errors for {{ model_label.label }}</h3>
-  <table class="table">
-    <th>Clip that confused model</th>
-    <th>Came out as</th>
-    <th>Common names</th>
-    {% for error in errors.items %}
-      <tr>
-	      <td><a href="{{ url_for('labels.view_clip', file_name=error.file_name, offset=error.offset) }}">{{ error.file_name }}: {{ error.offset }} secs</a></td>
-        <td>{{ error.came_out.name }}</td>
-        <td>
-          <ul>
-            {% for common_name in error.came_out.common_names %}
-              <li>{{ common_name.name }} ({{ common_name.language.name }})</li>
-            {% endfor %}
-          </ul>
-        </td>
-      </tr>
-    {% endfor %}
-  </table>
+  {% for error in errors.items %}
+    <div class="card mt-3 mb-3">
+      <div class="card-body row">
+        <div class="col-md-6">
+          <a class="btn btn-primary" href="javascript:void(0)" onclick="playClip('{{ error.file_name }}', '{{ error.offset }}')">Play clip</a>
+          <h5 class="card-title">Predicted label: {{ error.came_out }}</h5>
+          <p class="card-text">Start time: {{ error.file.timestamp }} +{{ error.offset }} secs</p>
+          <p class="card-text">Monitoring Station: {{ error.file.monitoring_station.name }}</p>
+          <p><a class="btn btn-primary" href="{{ url_for('labels.view_clip', file_name=error.file_name, offset=error.offset) }}">Edit Labels</a></p>
+          <div id="use-block-{{ loop.index }}" data-clip-id="{{ error.labeled_clip.id }}"></div>
+        </div>
+        <div class="col-md-6">
+          <img class="card-img-top" src="{{ url_for('audio.spectro', file_name=error.file_name, offset=error.offset) }}">
+        </div>
+      </div>
+    </div>
+  {% endfor %}
   {{ render_pagination(errors) }}
+{% endblock %}
+
+{% block scripts %}
+    {{super()}}
+    <script>
+      for (i = 1; i <= {{ errors.items | length }}; i++) {
+        const block = document.getElementById('use-block-' + i);
+        const props = {
+          iteration_id: {{ iteration.id }},
+          clip_id: block.getAttribute('data-clip-id'),
+          disabled: {{ (not labeling) | tojson }},
+        };
+        if (props.clip_id) {
+          ReactDOM.render(
+            React.createElement(EarthHz.UseClip, props, null),
+            block
+          );
+        }
+      }
+    </script>
 {% endblock %}
