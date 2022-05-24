@@ -369,6 +369,12 @@ def copy_iteration(iteration_id):
                 new_label.label = label.label
                 new_label.combine_with = label.combine_with
                 db.session.add(new_label)
+            clips = TrainingClip.query.filter(TrainingClip.iteration_id == iteration_id).all()
+            for clip in clips:
+                new_clip = TrainingClip()
+                new_clip.iteration = new_iteration
+                new_clip.labeled_clip = clip.labeled_clip
+                db.session.add(new_clip)
             db.session.commit()
             flash('New iteration created')
             return redirect(url_for('ml.view_iteration', iteration_id=new_iteration.id))
