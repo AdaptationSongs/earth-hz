@@ -10,7 +10,7 @@ cffi==1.14.0
 chardet==3.0.4
 charset-normalizer==2.0.10
 Click==7.0
-cryptography==3.3.2
+cryptography==39.0.1
 cycler==0.10.0
 dash==2.0.0
 dash-bootstrap-components==1.0.3
